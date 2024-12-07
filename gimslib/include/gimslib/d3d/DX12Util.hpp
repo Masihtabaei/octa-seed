@@ -12,11 +12,11 @@ namespace DX12Util
 void reportLiveObjects();
 void waitForFence(Microsoft::WRL::ComPtr<ID3D12Fence>& fence, ui64 completionValue);
 void waitForFence(Microsoft::WRL::ComPtr<ID3D12Fence>& fence, ui64 completionValue, HANDLE waitEvent);
-void throwOnDeviceLost(Microsoft::WRL::ComPtr<ID3D12Device> device, HRESULT hr, const std::string debugString);
+void throwOnDeviceLost(Microsoft::WRL::ComPtr<ID3D12Device2> device, HRESULT hr, const std::string debugString);
 
-template<class T> Microsoft::WRL::ComPtr<ID3D12Device> getDevice(const Microsoft::WRL::ComPtr<T>& id3dInterface)
+template<class T> Microsoft::WRL::ComPtr<ID3D12Device2> getDevice(const Microsoft::WRL::ComPtr<T>& id3dInterface)
 {
-  Microsoft::WRL::ComPtr<ID3D12Device> result;
+  Microsoft::WRL::ComPtr<ID3D12Device2> result;
   throwIfFailed(id3dInterface->GetDevice(IID_PPV_ARGS(&result)));
   return result;
 }

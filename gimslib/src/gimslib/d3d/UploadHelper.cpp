@@ -5,7 +5,7 @@
 namespace gims
 {
 
-UploadHelper::UploadHelper(const ComPtr<ID3D12Device>& device, size_t maxSize)
+UploadHelper::UploadHelper(const ComPtr<ID3D12Device2>& device, size_t maxSize)
     : m_device(device)
     , m_maxSize(maxSize)
 {

@@ -65,7 +65,7 @@ HWND createWindow(std::wstring title, ui32 width, ui32 height, gims::DX12App* dx
                       dx12App);
 }
 
-ComPtr<ID3D12InfoQueue> createD3D12InfoQueue(bool c_debug, ComPtr<ID3D12Device>& device)
+ComPtr<ID3D12InfoQueue> createD3D12InfoQueue(bool c_debug, ComPtr<ID3D12Device2>& device)
 {
   ComPtr<ID3D12InfoQueue> result = nullptr;
   if (c_debug)
@@ -147,7 +147,7 @@ ComPtr<IDXGIAdapter1> GetHardwareAdapter(IDXGIFactory1* pFactory, D3D_FEATURE_LE
       {
         continue;
       }
-      if (SUCCEEDED(D3D12CreateDevice(adapter.Get(), d3d_featureLevel, _uuidof(ID3D12Device), nullptr)))
+      if (SUCCEEDED(D3D12CreateDevice(adapter.Get(), d3d_featureLevel, _uuidof(ID3D12Device2), nullptr)))
       {
         break;
       }
@@ -165,7 +165,7 @@ ComPtr<IDXGIAdapter1> GetHardwareAdapter(IDXGIFactory1* pFactory, D3D_FEATURE_LE
       {
         continue;
       }
-      if (SUCCEEDED(D3D12CreateDevice(adapter.Get(), d3d_featureLevel, _uuidof(ID3D12Device), nullptr)))
+      if (SUCCEEDED(D3D12CreateDevice(adapter.Get(), d3d_featureLevel, _uuidof(ID3D12Device2), nullptr)))
       {
         break;
       }
@@ -174,9 +174,9 @@ ComPtr<IDXGIAdapter1> GetHardwareAdapter(IDXGIFactory1* pFactory, D3D_FEATURE_LE
   return adapter;
 }
 
-ComPtr<ID3D12Device> createDevice(bool debug, D3D_FEATURE_LEVEL d3d_featureLevel, const ComPtr<IDXGIFactory4>& factory)
+ComPtr<ID3D12Device2> createDevice(bool debug, D3D_FEATURE_LEVEL d3d_featureLevel, const ComPtr<IDXGIFactory4>& factory)
 {
-  ComPtr<ID3D12Device> device;
+  ComPtr<ID3D12Device2> device;
 
   ComPtr<IDXGIInfoQueue> dxgiInfoQueue   = createDXGIInfoQueue(debug);
   ComPtr<IDXGIAdapter1>  hardwareAdapter = GetHardwareAdapter(factory.Get(), d3d_featureLevel);
@@ -188,7 +188,7 @@ ComPtr<ID3D12Device> createDevice(bool debug, D3D_FEATURE_LEVEL d3d_featureLevel
   return device;
 }
 
-ComPtr<ID3D12CommandQueue> createCommandQueue(const ComPtr<ID3D12Device>& device)
+ComPtr<ID3D12CommandQueue> createCommandQueue(const ComPtr<ID3D12Device2>& device)
 {
   ComPtr<ID3D12CommandQueue> result;
 
@@ -201,7 +201,7 @@ ComPtr<ID3D12CommandQueue> createCommandQueue(const ComPtr<ID3D12Device>& device
   return result;
 }
 
-std::vector<ComPtr<ID3D12CommandAllocator>> createCommandAllocators(const ComPtr<ID3D12Device>& device,
+std::vector<ComPtr<ID3D12CommandAllocator>> createCommandAllocators(const ComPtr<ID3D12Device2>& device,
                                                                     const ui32                  frameCount)
 {
   std::vector<ComPtr<ID3D12CommandAllocator>> result(frameCount);
@@ -212,10 +212,10 @@ std::vector<ComPtr<ID3D12CommandAllocator>> createCommandAllocators(const ComPtr
   return result;
 }
 
-std::vector<ComPtr<ID3D12GraphicsCommandList>> createCommandLists(
+std::vector<ComPtr<ID3D12GraphicsCommandList6>> createCommandLists(
     const std::vector<ComPtr<ID3D12CommandAllocator>>& commandAllocators)
 {
-  std::vector<ComPtr<ID3D12GraphicsCommandList>> result(commandAllocators.size());
+  std::vector<ComPtr<ID3D12GraphicsCommandList6>> result(commandAllocators.size());
 
   for (size_t i = 0; i < result.size(); i++)
   {
@@ -287,12 +287,12 @@ void DX12App::waitForGPU()
   m_swapChainAdapter->waitForGPU();
 }
 
-const ComPtr<ID3D12Device>& DX12App::getDevice() const
+const ComPtr<ID3D12Device2>& DX12App::getDevice() const
 {
   return m_device;
 }
 
-const ComPtr<ID3D12GraphicsCommandList>& DX12App::getCommandList() const
+const ComPtr<ID3D12GraphicsCommandList6>& DX12App::getCommandList() const
 {
   return m_commandLists[m_swapChainAdapter->getFrameIndex()];
 }

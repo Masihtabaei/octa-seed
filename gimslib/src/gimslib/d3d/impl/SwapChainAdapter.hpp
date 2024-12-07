@@ -38,7 +38,7 @@ public:
 private:
   const ComPtr<IDXGIFactory4>&        m_factory;
   const HWND                          m_hwnd;
-  const ComPtr<ID3D12Device>          m_device;
+  const ComPtr<ID3D12Device2>          m_device;
   const ComPtr<ID3D12CommandQueue>&   m_commandQueue;
   ComPtr<ID3D12DescriptorHeap>        m_rtvDescriptorHeap;
   ComPtr<ID3D12DescriptorHeap>        m_dsvDescriptorHeap;

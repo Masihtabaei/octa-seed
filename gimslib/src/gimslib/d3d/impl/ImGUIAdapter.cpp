@@ -4,7 +4,7 @@
 #include <gimslib/dbg/HrException.hpp>
 namespace
 {
-ComPtr<ID3D12DescriptorHeap> createSRVDescriptorHeap(const ComPtr<ID3D12Device>& device)
+ComPtr<ID3D12DescriptorHeap> createSRVDescriptorHeap(const ComPtr<ID3D12Device2>& device)
 {
 
   ComPtr<ID3D12DescriptorHeap> result;
@@ -22,7 +22,7 @@ namespace gims
 {
 namespace impl
 {
-ImGUIAdapter::ImGUIAdapter(HWND hwnd, const ComPtr<ID3D12Device>& device, ui32 frameCount,
+ImGUIAdapter::ImGUIAdapter(HWND hwnd, const ComPtr<ID3D12Device2>& device, ui32 frameCount,
                            DXGI_FORMAT renderTargetFormat)
     : m_imguiSRVDescriptorHeap(createSRVDescriptorHeap(device))
 {
@@ -52,7 +52,7 @@ void ImGUIAdapter::render()
 {
   ImGui::Render();
 }
-void ImGUIAdapter::addToCommadList(const ComPtr<ID3D12GraphicsCommandList>& commandList)
+void ImGUIAdapter::addToCommadList(const ComPtr<ID3D12GraphicsCommandList6>& commandList)
 {
   commandList->SetDescriptorHeaps(1, m_imguiSRVDescriptorHeap.GetAddressOf());
   ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList.Get());

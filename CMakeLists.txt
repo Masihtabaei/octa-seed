@@ -29,6 +29,6 @@ add_subdirectory(./Assignments)
 add_subdirectory(./Tutorials)
 
 # set the startup project for the "play" button in MSVC
-set_property(GLOBAL PROPERTY USE_FOLDERS ON)
-set_property(DIRECTORY PROPERTY VS_STARTUP_PROJECT T00GLM)
+# set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+# set_property(DIRECTORY PROPERTY VS_STARTUP_PROJECT T00GLM)
 

@@ -46,7 +46,7 @@ bool isDeviceLost(HRESULT hr)
   return hr == DXGI_ERROR_DEVICE_REMOVED || hr == DXGI_ERROR_DEVICE_RESET;
 }
 
-void throwOnDeviceLost(Microsoft::WRL::ComPtr<ID3D12Device> device, HRESULT hr, const std::string debugString)
+void throwOnDeviceLost(Microsoft::WRL::ComPtr<ID3D12Device2> device, HRESULT hr, const std::string debugString)
 {
   if (isDeviceLost(hr))
   {

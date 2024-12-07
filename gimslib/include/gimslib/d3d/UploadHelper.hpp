@@ -8,7 +8,7 @@ using Microsoft::WRL::ComPtr;
 class UploadHelper
 {
 public:
-  UploadHelper(const ComPtr<ID3D12Device>& device, size_t maxSize);
+  UploadHelper(const ComPtr<ID3D12Device2>& device, size_t maxSize);
 
   ~UploadHelper();
 
@@ -29,11 +29,11 @@ public:
 private:
   void executeUploadSync(const ComPtr<ID3D12CommandQueue>& commandQueue);
 
-  const ComPtr<ID3D12Device>        m_device;
+  const ComPtr<ID3D12Device2>        m_device;
   size_t                            m_maxSize;
   ComPtr<ID3D12Resource>            m_uploadBuffer;
   ComPtr<ID3D12CommandAllocator>    m_uploadCommandAllocator;
-  ComPtr<ID3D12GraphicsCommandList> m_uploadCommandList;
+  ComPtr<ID3D12GraphicsCommandList6> m_uploadCommandList;
 };
 
 } // namespace gims

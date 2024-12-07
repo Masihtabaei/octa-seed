@@ -64,7 +64,7 @@ struct ImGui_ImplDX12_RenderBuffers
 
 struct ImGui_ImplDX12_Data
 {
-  ID3D12Device*               pd3dDevice;
+  ID3D12Device2*              pd3dDevice;
   ID3D12RootSignature*        pRootSignature;
   ID3D12PipelineState*        pPipelineState;
   DXGI_FORMAT                 RTVFormat;
@@ -97,7 +97,7 @@ static ImGui_ImplDX12_Data* ImGui_ImplDX12_GetBackendData()
 }
 
 // Functions
-static void ImGui_ImplDX12_SetupRenderState(ImDrawData* draw_data, ID3D12GraphicsCommandList* ctx,
+static void ImGui_ImplDX12_SetupRenderState(ImDrawData* draw_data, ID3D12GraphicsCommandList6* ctx,
                                             ImGui_ImplDX12_RenderBuffers* fr)
 {
   ImGui_ImplDX12_Data* bd = ImGui_ImplDX12_GetBackendData();
@@ -163,7 +163,7 @@ template<typename T> static inline void SafeRelease(T*& res)
 }
 
 // Render function
-void ImGui_ImplDX12_RenderDrawData(ImDrawData* draw_data, ID3D12GraphicsCommandList* ctx)
+void ImGui_ImplDX12_RenderDrawData(ImDrawData* draw_data, ID3D12GraphicsCommandList6* ctx)
 {
   // Avoid rendering when minimized
   if (draw_data->DisplaySize.x <= 0.0f || draw_data->DisplaySize.y <= 0.0f)
@@ -720,7 +720,7 @@ void ImGui_ImplDX12_InvalidateDeviceObjects()
   }
 }
 
-bool ImGui_ImplDX12_Init(ID3D12Device* device, int num_frames_in_flight, DXGI_FORMAT rtv_format,
+bool ImGui_ImplDX12_Init(ID3D12Device2* device, int num_frames_in_flight, DXGI_FORMAT rtv_format,
                          ID3D12DescriptorHeap* cbv_srv_heap, D3D12_CPU_DESCRIPTOR_HANDLE font_srv_cpu_desc_handle,
                          D3D12_GPU_DESCRIPTOR_HANDLE font_srv_gpu_desc_handle)
 {

@@ -12,13 +12,13 @@ namespace impl
 class ImGUIAdapter
 {
 public:
-  ImGUIAdapter(HWND hwnd, const ComPtr<ID3D12Device>& device, ui32 frameCount, DXGI_FORMAT renderTargetFormat);
+  ImGUIAdapter(HWND hwnd, const ComPtr<ID3D12Device2>& device, ui32 frameCount, DXGI_FORMAT renderTargetFormat);
 
   ~ImGUIAdapter();
 
   void newFrame();
   void render();
-  void addToCommadList(const ComPtr<ID3D12GraphicsCommandList>& commandList);
+  void addToCommadList(const ComPtr<ID3D12GraphicsCommandList6>& commandList);
 
 private:
   ComPtr<ID3D12DescriptorHeap> m_imguiSRVDescriptorHeap;

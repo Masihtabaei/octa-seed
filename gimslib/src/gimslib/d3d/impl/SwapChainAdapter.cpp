@@ -5,7 +5,7 @@
 
 namespace
 {
-ComPtr<ID3D12Fence> createD3DFence(const ComPtr<ID3D12Device>& device)
+ComPtr<ID3D12Fence> createD3DFence(const ComPtr<ID3D12Device2>& device)
 {
   ComPtr<ID3D12Fence> result;
   throwIfFailed(device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&result)));
@@ -35,7 +35,7 @@ ComPtr<IDXGISwapChain4> createSwapChain(ui32 width, ui32 height, ui32 frameCount
   return result;
 }
 
-std::vector<ComPtr<ID3D12Resource>> createRenderTargets(const ComPtr<ID3D12Device>&         device,
+std::vector<ComPtr<ID3D12Resource>> createRenderTargets(const ComPtr<ID3D12Device2>&         device,
                                                         const ComPtr<ID3D12DescriptorHeap>& rtvHeap,
                                                         const ComPtr<IDXGISwapChain3>& swapChain, const ui32 frameCount,
                                                         ui32 rtvDescriptorSize)
@@ -53,7 +53,7 @@ std::vector<ComPtr<ID3D12Resource>> createRenderTargets(const ComPtr<ID3D12Devic
   return result;
 }
 
-ComPtr<ID3D12Resource> createDepthStencil(const ComPtr<ID3D12Device>&         device,
+ComPtr<ID3D12Resource> createDepthStencil(const ComPtr<ID3D12Device2>&         device,
                                           const ComPtr<ID3D12DescriptorHeap>& dsvHeap, ui32 width, ui32 height,
                                           DXGI_FORMAT depthBufferFormat)
 {
@@ -80,7 +80,7 @@ ComPtr<ID3D12Resource> createDepthStencil(const ComPtr<ID3D12Device>&         de
   return result;
 }
 
-ComPtr<ID3D12DescriptorHeap> createRTVDescriptorHeap(const ComPtr<ID3D12Device>& device, ui32 frameCount)
+ComPtr<ID3D12DescriptorHeap> createRTVDescriptorHeap(const ComPtr<ID3D12Device2>& device, ui32 frameCount)
 {
   ComPtr<ID3D12DescriptorHeap> result;
 
@@ -94,7 +94,7 @@ ComPtr<ID3D12DescriptorHeap> createRTVDescriptorHeap(const ComPtr<ID3D12Device>&
   return result;
 }
 
-ComPtr<ID3D12DescriptorHeap> createDSVDescriptorHeap(const ComPtr<ID3D12Device>& device)
+ComPtr<ID3D12DescriptorHeap> createDSVDescriptorHeap(const ComPtr<ID3D12Device2>& device)
 {
   ComPtr<ID3D12DescriptorHeap> result;
 

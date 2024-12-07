@@ -62,9 +62,9 @@ public:
   ui32  getWidth() const;
   ui32  getHeight() const;
 
-  const ComPtr<ID3D12Device>&              getDevice() const;
+  const ComPtr<ID3D12Device2>&              getDevice() const;
   const ComPtr<ID3D12CommandQueue>&        getCommandQueue() const;
-  const ComPtr<ID3D12GraphicsCommandList>& getCommandList() const;
+  const ComPtr<ID3D12GraphicsCommandList6>& getCommandList() const;
   const ComPtr<ID3D12CommandAllocator>&    getCommandAllocator() const;
   const ComPtr<ID3D12Resource>&            getRenderTarget() const;
   const ComPtr<ID3D12Resource>&            getDepthStencil() const;
@@ -89,11 +89,11 @@ private:
   DX12AppConfig                                  m_config;
   HWND                                           m_hwnd;
   ComPtr<IDXGIFactory4>                          m_factory;
-  ComPtr<ID3D12Device>                           m_device;
+  ComPtr<ID3D12Device2>                           m_device;
   gims::HLSLCompiler                             m_hlslCompiler;
   ComPtr<ID3D12CommandQueue>                     m_commandQueue;
   std::vector<ComPtr<ID3D12CommandAllocator>>    m_commandAllocators;
-  std::vector<ComPtr<ID3D12GraphicsCommandList>> m_commandLists;
+  std::vector<ComPtr<ID3D12GraphicsCommandList6>> m_commandLists;
   std::unique_ptr<impl::ImGUIAdapter>            m_imGUIAdapter;
   std::unique_ptr<impl::SwapChainAdapter>        m_swapChainAdapter;
   WindowState                                    m_windowState;
