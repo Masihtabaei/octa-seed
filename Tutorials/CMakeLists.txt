@@ -1,0 +1,3 @@
+add_subdirectory(./TXBasicFrameworkForModernGeometryPipeline)
+set_target_properties (TXBasicFrameworkForModernGeometryPipeline PROPERTIES FOLDER tutorials)
+

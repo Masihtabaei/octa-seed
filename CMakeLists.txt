@@ -26,9 +26,9 @@ set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} /Ox")
 project(GImS VERSION 0.0.1 DESCRIPTION "" LANGUAGES CXX C)
 add_subdirectory(./gimslib)
 add_subdirectory(./Assignments)
-add_subdirectory(./Tutorials)
+add_subdirectory(./tutorials)
 
 # set the startup project for the "play" button in MSVC
-# set_property(GLOBAL PROPERTY USE_FOLDERS ON)
-# set_property(DIRECTORY PROPERTY VS_STARTUP_PROJECT T00GLM)
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+set_property(DIRECTORY PROPERTY VS_STARTUP_PROJECT TXBasicFrameworkForModernGeometryPipeline)
 
