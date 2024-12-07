@@ -120,7 +120,7 @@ public:
 int main(int /* argc*/, char /* **argv */)
 {
   gims::DX12AppConfig config;
-  config.title    = L"Tutorial X Naive Triangle With Mesh Shader";
+  config.title    = L"Tutorial X Naive Triangle With Mesh Shader (Single Threaded)";
   config.useVSync = false;  
   try
   {
