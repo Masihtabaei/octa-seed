@@ -1,3 +1,5 @@
 add_subdirectory(./TXBasicFrameworkForModernGeometryPipeline)
 set_target_properties (TXBasicFrameworkForModernGeometryPipeline PROPERTIES FOLDER tutorials)
 
+add_subdirectory(./TXNaiveTriangleWithMeshShader)
+set_target_properties (TXNaiveTriangleWithMeshShader PROPERTIES FOLDER tutorials)
