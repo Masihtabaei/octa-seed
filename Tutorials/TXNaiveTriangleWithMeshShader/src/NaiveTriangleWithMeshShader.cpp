@@ -15,11 +15,64 @@ private:
 
   UiData m_uiData;
 
+  ComPtr<ID3D12PipelineState> m_pipelineState;
+  ComPtr<ID3D12RootSignature> m_rootSignature;
+
+  void createRootSignature()
+  {
+    CD3DX12_ROOT_SIGNATURE_DESC descRootSignature;
+    descRootSignature.Init(0, nullptr, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_NONE);
+
+    ComPtr<ID3DBlob> rootBlob, errorBlob;
+    D3D12SerializeRootSignature(&descRootSignature, D3D_ROOT_SIGNATURE_VERSION_1, &rootBlob, &errorBlob);
+
+    getDevice()->CreateRootSignature(0, rootBlob->GetBufferPointer(), rootBlob->GetBufferSize(),
+                                     IID_PPV_ARGS(&m_rootSignature));
+
+    std::cout << "Root signature created successfully!" << std::endl;
+  }
+
+  void createPipeline()
+  {
+    const auto meshShader =
+        compileShader(L"../../../Tutorials/TXNaiveTriangleWithMeshShader/shaders/NaiveTriangle.hlsl",
+                      L"MS_main", L"ms_6_5");
+    const auto pixelShader =
+        compileShader(L"../../../Tutorials/TXNaiveTriangleWithMeshShader/Shaders/NaiveTriangle.hlsl",
+                      L"PS_main", L"ps_6_5");
+
+    D3DX12_MESH_SHADER_PIPELINE_STATE_DESC psoDesc = {};
+    psoDesc.pRootSignature                         = m_rootSignature.Get();
+    psoDesc.MS                                     = HLSLCompiler::convert(meshShader);
+    psoDesc.PS                                     = HLSLCompiler::convert(pixelShader);
+    psoDesc.RasterizerState                        = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+    psoDesc.BlendState                             = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+    psoDesc.DSVFormat                              = getDX12AppConfig().depthBufferFormat;
+    psoDesc.DepthStencilState.DepthEnable          = FALSE;
+    psoDesc.DepthStencilState.StencilEnable        = FALSE;
+    psoDesc.SampleMask                             = UINT_MAX;
+    psoDesc.NumRenderTargets                       = 1;
+    psoDesc.RTVFormats[0]                          = getRenderTarget()->GetDesc().Format;
+    psoDesc.DSVFormat                              = getDepthStencil()->GetDesc().Format;
+    psoDesc.SampleDesc.Count                       = 1;
+
+    auto psoStream = CD3DX12_PIPELINE_MESH_STATE_STREAM(psoDesc);
+
+    D3D12_PIPELINE_STATE_STREAM_DESC streamDesc;
+    streamDesc.pPipelineStateSubobjectStream = &psoStream;
+    streamDesc.SizeInBytes                   = sizeof(psoStream);
+
+    throwIfFailed(getDevice()->CreatePipelineState(&streamDesc, IID_PPV_ARGS(&m_pipelineState)));
+
+    std::cout << "Pipeline created successfully!" << std::endl;
+  }
 
 public:
   BasicFramework(const DX12AppConfig createInfo)
       : DX12App(createInfo)
   {
+    createRootSignature();
+    createPipeline();
   }
 
   void checkForMeshShaderSupport()
@@ -42,6 +95,15 @@ public:
     f32v4 clearColor = {m_uiData.m_backgroundColor[0], m_uiData.m_backgroundColor[1], m_uiData.m_backgroundColor[2], 1.0f};
     commandList->ClearRenderTargetView(rtvHandle, &clearColor.x, 0, nullptr);
     commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+    
+    
+    commandList->RSSetViewports(1, &getViewport());
+    commandList->RSSetScissorRects(1, &getRectScissor());
+
+    commandList->SetPipelineState(m_pipelineState.Get());
+    commandList->SetGraphicsRootSignature(m_rootSignature.Get());
+    commandList->DispatchMesh(1, 1, 1);
+  
   }
 
   virtual void onDrawUI()
