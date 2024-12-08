@@ -17,6 +17,7 @@ private:
   UiData m_uiData;
 
   ComPtr<ID3D12PipelineState> m_pipelineState;
+  ComPtr<ID3D12PipelineState> m_wireFramePipelineState;
   ComPtr<ID3D12RootSignature> m_rootSignature;
 
   gims::ExaminerController m_examinerController;
@@ -24,7 +25,7 @@ private:
   void createRootSignature()
   {
     CD3DX12_ROOT_PARAMETER rootParameters[1] = {};
-    rootParameters[0].InitAsConstants(16, 0, 0, D3D12_SHADER_VISIBILITY_MESH);
+    rootParameters[0].InitAsConstants(32, 0, 0, D3D12_SHADER_VISIBILITY_ALL);
 
     CD3DX12_ROOT_SIGNATURE_DESC descRootSignature;
     descRootSignature.Init(1, rootParameters, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_NONE);
@@ -52,6 +53,7 @@ private:
     psoDesc.MS                                     = HLSLCompiler::convert(meshShader);
     psoDesc.PS                                     = HLSLCompiler::convert(pixelShader);
     psoDesc.RasterizerState                        = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+    psoDesc.RasterizerState.FillMode               = D3D12_FILL_MODE_WIREFRAME;
     psoDesc.RasterizerState.CullMode               = D3D12_CULL_MODE_NONE;
     psoDesc.BlendState                             = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
     psoDesc.DSVFormat                              = getDX12AppConfig().depthBufferFormat;
@@ -79,7 +81,7 @@ public:
       : DX12App(createInfo),
       m_examinerController(true)
   {
-    m_examinerController.setTranslationVector(f32v3(0.0f, 0.0f, 6.0f));
+    m_examinerController.setTranslationVector(f32v3(0.0f, 0.0f, 4.0f));
     createRootSignature();
     createPipeline();
   }
@@ -126,17 +128,16 @@ public:
     commandList->RSSetViewports(1, &getViewport());
     commandList->RSSetScissorRects(1, &getRectScissor());
 
-    commandList->SetPipelineState(m_pipelineState.Get());
-    commandList->SetGraphicsRootSignature(m_rootSignature.Get());
-
-
     const auto projectionMatrix =
         glm::perspectiveFovLH_ZO<f32>(glm::radians(45.0f), (f32)getWidth(), (f32)getHeight(), 0.0001f, 10000.0f);
     const auto viewMatrix = m_examinerController.getTransformationMatrix();
+
+    commandList->SetPipelineState(m_pipelineState.Get());
+    commandList->SetGraphicsRootSignature(m_rootSignature.Get());
     const auto accumulatedTransformation = projectionMatrix * viewMatrix;
     commandList->SetGraphicsRoot32BitConstants(0, 16, &accumulatedTransformation, 0);
     commandList->DispatchMesh(1, 1, 1);
-  
+
   }
 
   virtual void onDrawUI()
