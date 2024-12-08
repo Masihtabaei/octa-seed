@@ -1,0 +1,2 @@
+add_subdirectory(./UVSphereWithInterLOD)
+set_target_properties (UVSphereWithInterLOD PROPERTIES FOLDER assignments)
