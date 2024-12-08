@@ -9,3 +9,6 @@ set_target_properties (TXNaiveTriangleWithMeshShaderWithMultipleThreads PROPERTI
 
 add_subdirectory(./TXNaiveEllipseWithMeshShaderWithMultipleThreads)
 set_target_properties (TXNaiveEllipseWithMeshShaderWithMultipleThreads PROPERTIES FOLDER tutorials)
+
+add_subdirectory(./TXNaiveSphereWithMeshShaderWithMultipleThreads)
+set_target_properties (TXNaiveSphereWithMeshShaderWithMultipleThreads PROPERTIES FOLDER tutorials)
