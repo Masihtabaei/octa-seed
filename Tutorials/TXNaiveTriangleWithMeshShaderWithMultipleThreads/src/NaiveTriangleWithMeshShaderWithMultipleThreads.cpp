@@ -5,7 +5,7 @@
 #include <iostream>
 using namespace gims;
 
-class BasicFramework : public DX12App
+class TriangleRenderer : public DX12App
 {
 private:
   struct UiData
@@ -68,7 +68,7 @@ private:
   }
 
 public:
-  BasicFramework(const DX12AppConfig createInfo)
+  TriangleRenderer(const DX12AppConfig createInfo)
       : DX12App(createInfo)
   {
     createRootSignature();
@@ -124,7 +124,7 @@ int main(int /* argc*/, char /* **argv */)
   config.useVSync = false;  
   try
   {
-    BasicFramework app(config);
+    TriangleRenderer app(config);
     app.checkForMeshShaderSupport();
     app.run();
   }
