@@ -1,4 +1,4 @@
 include("../../CreateApp.cmake")
-set(SOURCES "./src/NaiveEllipseWithMeshShaderWithMultipleThreads.cpp")
-set(SHADERS "./shaders/NaiveEllipse.hlsl")
+set(SOURCES "./src/EllipseRenderer.cpp")
+set(SHADERS "./shaders/Ellipse.hlsl")
 create_app(TXNaiveEllipseWithMeshShaderWithMultipleThreads "${SOURCES}" "${SHADERS}")

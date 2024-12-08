@@ -1,2 +1,2 @@
-add_subdirectory(./UVSphereWithInterLOD)
-set_target_properties (UVSphereWithInterLOD PROPERTIES FOLDER assignments)
+add_subdirectory(./AXUVSphereWithInterLOD)
+set_target_properties (AXUVSphereWithInterLOD PROPERTIES FOLDER assignments)

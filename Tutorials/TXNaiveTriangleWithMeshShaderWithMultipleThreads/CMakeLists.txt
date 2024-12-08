@@ -1,4 +1,4 @@
 include("../../CreateApp.cmake")
-set(SOURCES "./src/NaiveTriangleWithMeshShaderWithMultipleThreads.cpp")
-set(SHADERS "./shaders/NaiveTriangle.hlsl")
+set(SOURCES "./src/TriangleRenderer.cpp")
+set(SHADERS "./shaders/Triangle.hlsl")
 create_app(TXNaiveTriangleWithMeshShaderWithMultipleThreads "${SOURCES}" "${SHADERS}")

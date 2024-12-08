@@ -2,10 +2,11 @@
 #include <gimslib/d3d/DX12Util.hpp>
 #include <gimslib/types.hpp>
 #include <imgui.h>
+#include <gimslib/ui/ExaminerController.hpp>
 #include <iostream>
 using namespace gims;
 
-class BasicFramework : public DX12App
+class SphereRenderer : public DX12App
 {
 private:
   struct UiData
@@ -16,12 +17,18 @@ private:
   UiData m_uiData;
 
   ComPtr<ID3D12PipelineState> m_pipelineState;
+  ComPtr<ID3D12PipelineState> m_wireFramePipelineState;
   ComPtr<ID3D12RootSignature> m_rootSignature;
+
+  gims::ExaminerController m_examinerController;
 
   void createRootSignature()
   {
+    CD3DX12_ROOT_PARAMETER rootParameters[1] = {};
+    rootParameters[0].InitAsConstants(32, 0, 0, D3D12_SHADER_VISIBILITY_ALL);
+
     CD3DX12_ROOT_SIGNATURE_DESC descRootSignature;
-    descRootSignature.Init(0, nullptr, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_NONE);
+    descRootSignature.Init(1, rootParameters, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_NONE);
 
     ComPtr<ID3DBlob> rootBlob, errorBlob;
     D3D12SerializeRootSignature(&descRootSignature, D3D_ROOT_SIGNATURE_VERSION_1, &rootBlob, &errorBlob);
@@ -35,10 +42,10 @@ private:
   void createPipeline()
   {
     const auto meshShader =
-        compileShader(L"../../../Tutorials/TXNaiveTriangleWithMeshShaderWithASingleThread/shaders/NaiveTriangle.hlsl",
+        compileShader(L"../../../tutorials/TXNaiveSphereWithMeshShaderWithMultipleThreads/shaders/Sphere.hlsl",
                       L"MS_main", L"ms_6_5");
     const auto pixelShader =
-        compileShader(L"../../../Tutorials/TXNaiveTriangleWithMeshShaderWithASingleThread/Shaders/NaiveTriangle.hlsl",
+        compileShader(L"../../../tutorials/TXNaiveSphereWithMeshShaderWithMultipleThreads/shaders/Sphere.hlsl",
                       L"PS_main", L"ps_6_5");
 
     D3DX12_MESH_SHADER_PIPELINE_STATE_DESC psoDesc = {};
@@ -46,6 +53,8 @@ private:
     psoDesc.MS                                     = HLSLCompiler::convert(meshShader);
     psoDesc.PS                                     = HLSLCompiler::convert(pixelShader);
     psoDesc.RasterizerState                        = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+    psoDesc.RasterizerState.FillMode               = D3D12_FILL_MODE_WIREFRAME;
+    psoDesc.RasterizerState.CullMode               = D3D12_CULL_MODE_NONE;
     psoDesc.BlendState                             = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
     psoDesc.DSVFormat                              = getDX12AppConfig().depthBufferFormat;
     psoDesc.DepthStencilState.DepthEnable          = FALSE;
@@ -68,9 +77,11 @@ private:
   }
 
 public:
-  BasicFramework(const DX12AppConfig createInfo)
-      : DX12App(createInfo)
+  SphereRenderer(const DX12AppConfig createInfo)
+      : DX12App(createInfo),
+      m_examinerController(true)
   {
+    m_examinerController.setTranslationVector(f32v3(0.0f, 0.0f, 4.0f));
     createRootSignature();
     createPipeline();
   }
@@ -87,6 +98,23 @@ public:
 
   virtual void onDraw()
   {
+    if (!ImGui::GetIO().WantCaptureMouse)
+    {
+      bool pressed  = ImGui::IsMouseClicked(ImGuiMouseButton_Left) || ImGui::IsMouseClicked(ImGuiMouseButton_Right);
+      bool released = ImGui::IsMouseReleased(ImGuiMouseButton_Left) || ImGui::IsMouseReleased(ImGuiMouseButton_Right);
+      if (pressed || released)
+      {
+        bool left = ImGui::IsMouseClicked(ImGuiMouseButton_Left) || ImGui::IsMouseReleased(ImGuiMouseButton_Left);
+        m_examinerController.click(pressed, left == true ? 1 : 2,
+                                   ImGui::IsKeyDown(ImGuiKey_LeftCtrl) || ImGui::IsKeyDown(ImGuiKey_RightCtrl),
+                                   getNormalizedMouseCoordinates());
+      }
+      else
+      {
+        m_examinerController.move(getNormalizedMouseCoordinates());
+      }
+    }
+
     const auto commandList = getCommandList();
     const auto rtvHandle   = getRTVHandle();
     const auto dsvHandle   = getDSVHandle();
@@ -100,10 +128,16 @@ public:
     commandList->RSSetViewports(1, &getViewport());
     commandList->RSSetScissorRects(1, &getRectScissor());
 
+    const auto projectionMatrix =
+        glm::perspectiveFovLH_ZO<f32>(glm::radians(45.0f), (f32)getWidth(), (f32)getHeight(), 0.0001f, 10000.0f);
+    const auto viewMatrix = m_examinerController.getTransformationMatrix();
+
     commandList->SetPipelineState(m_pipelineState.Get());
     commandList->SetGraphicsRootSignature(m_rootSignature.Get());
+    const auto accumulatedTransformation = projectionMatrix * viewMatrix;
+    commandList->SetGraphicsRoot32BitConstants(0, 16, &accumulatedTransformation, 0);
     commandList->DispatchMesh(1, 1, 1);
-  
+
   }
 
   virtual void onDrawUI()
@@ -120,11 +154,11 @@ public:
 int main(int /* argc*/, char /* **argv */)
 {
   gims::DX12AppConfig config;
-  config.title    = L"Tutorial X Naive Triangle With Mesh Shader (Single Threaded)";
+  config.title    = L"Tutorial X Naive Sphere With Mesh Shader";
   config.useVSync = false;  
   try
   {
-    BasicFramework app(config);
+    SphereRenderer app(config);
     app.checkForMeshShaderSupport();
     app.run();
   }
