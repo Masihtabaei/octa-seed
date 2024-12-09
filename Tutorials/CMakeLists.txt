@@ -1,14 +1,20 @@
 add_subdirectory(./TXBasicFrameworkForModernGeometryPipeline)
 set_target_properties (TXBasicFrameworkForModernGeometryPipeline PROPERTIES FOLDER tutorials)
 
-add_subdirectory(./TXNaiveTriangleWithMeshShaderWithASingleThread)
-set_target_properties (TXNaiveTriangleWithMeshShaderWithASingleThread PROPERTIES FOLDER tutorials)
+add_subdirectory(./TXTriangleSingleThreaded)
+set_target_properties (TXTriangleSingleThreaded PROPERTIES FOLDER tutorials)
 
-add_subdirectory(./TXNaiveTriangleWithMeshShaderWithMultipleThreads)
-set_target_properties (TXNaiveTriangleWithMeshShaderWithMultipleThreads PROPERTIES FOLDER tutorials)
+add_subdirectory(./TXTriangleMultiThreaded)
+set_target_properties (TXTriangleMultiThreaded PROPERTIES FOLDER tutorials)
 
-add_subdirectory(./TXNaiveEllipseWithMeshShaderWithMultipleThreads)
-set_target_properties (TXNaiveEllipseWithMeshShaderWithMultipleThreads PROPERTIES FOLDER tutorials)
+add_subdirectory(./TXEllipseMultiThreaded)
+set_target_properties (TXEllipseMultiThreaded PROPERTIES FOLDER tutorials)
 
-add_subdirectory(./TXNaiveSphereWithMeshShaderWithMultipleThreads)
-set_target_properties (TXNaiveSphereWithMeshShaderWithMultipleThreads PROPERTIES FOLDER tutorials)
+add_subdirectory(./TXSphereMultiThreaded)
+set_target_properties (TXSphereMultiThreaded PROPERTIES FOLDER tutorials)
+
+add_subdirectory(./TXRectangleMultiThreaded)
+set_target_properties (TXRectangleMultiThreaded PROPERTIES FOLDER tutorials)
+
+add_subdirectory(./TXTwoTrianglesMultiThreaded)
+set_target_properties (TXTwoTrianglesMultiThreaded PROPERTIES FOLDER tutorials)

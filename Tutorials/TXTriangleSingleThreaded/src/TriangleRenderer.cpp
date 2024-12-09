@@ -5,7 +5,7 @@
 #include <iostream>
 using namespace gims;
 
-class EllipseRenderer : public DX12App
+class TriangleRenderer : public DX12App
 {
 private:
   struct UiData
@@ -35,10 +35,10 @@ private:
   void createPipeline()
   {
     const auto meshShader =
-        compileShader(L"../../../tutorials/TXNaiveEllipseWithMeshShaderWithMultipleThreads/shaders/Ellipse.hlsl",
+        compileShader(L"../../../tutorials/TXTriangleSingleThreaded/shaders/Triangle.hlsl",
                       L"MS_main", L"ms_6_5");
     const auto pixelShader =
-        compileShader(L"../../../tutorials/TXNaiveEllipseWithMeshShaderWithMultipleThreads/shaders/Ellipse.hlsl",
+        compileShader(L"../../../tutorials/TXTriangleSingleThreaded/shaders/Triangle.hlsl",
                       L"PS_main", L"ps_6_5");
 
     D3DX12_MESH_SHADER_PIPELINE_STATE_DESC psoDesc = {};
@@ -68,7 +68,7 @@ private:
   }
 
 public:
-  EllipseRenderer(const DX12AppConfig createInfo)
+  TriangleRenderer(const DX12AppConfig createInfo)
       : DX12App(createInfo)
   {
     createRootSignature();
@@ -120,11 +120,11 @@ public:
 int main(int /* argc*/, char /* **argv */)
 {
   gims::DX12AppConfig config;
-  config.title    = L"Tutorial X Naive Ellipse With Mesh Shader";
+  config.title    = L"Tutorial X Triangle With Mesh Shader (Single Threaded)";
   config.useVSync = false;  
   try
   {
-    EllipseRenderer app(config);
+    TriangleRenderer app(config);
     app.checkForMeshShaderSupport();
     app.run();
   }

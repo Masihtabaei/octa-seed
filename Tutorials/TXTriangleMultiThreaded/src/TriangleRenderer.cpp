@@ -35,10 +35,10 @@ private:
   void createPipeline()
   {
     const auto meshShader =
-        compileShader(L"../../../tutorials/TXNaiveTriangleWithMeshShaderWithASingleThread/shaders/Triangle.hlsl",
+        compileShader(L"../../../tutorials/TXTriangleMultiThreaded/shaders/Triangle.hlsl",
                       L"MS_main", L"ms_6_5");
     const auto pixelShader =
-        compileShader(L"../../../tutorials/TXNaiveTriangleWithMeshShaderWithASingleThread/shaders/Triangle.hlsl",
+        compileShader(L"../../../tutorials/TXTriangleMultiThreaded/shaders/Triangle.hlsl",
                       L"PS_main", L"ps_6_5");
 
     D3DX12_MESH_SHADER_PIPELINE_STATE_DESC psoDesc = {};
@@ -120,7 +120,7 @@ public:
 int main(int /* argc*/, char /* **argv */)
 {
   gims::DX12AppConfig config;
-  config.title    = L"Tutorial X Naive Triangle With Mesh Shader (Single Threaded)";
+  config.title    = L"Tutorial X Triangle With Mesh Shader (Multi-Threaded)";
   config.useVSync = false;  
   try
   {
