@@ -35,10 +35,10 @@ private:
   void createPipeline()
   {
     const auto meshShader =
-        compileShader(L"../../../tutorials/TXTwoTrianglesMultiThreaded/shaders/Triangles.hlsl",
+        compileShader(L"../../../tutorials/TXEllipseMultiThreaded/shaders/Ellipse.hlsl",
                       L"MS_main", L"ms_6_5");
     const auto pixelShader =
-        compileShader(L"../../../tutorials/TXTwoTrianglesMultiThreaded/shaders/Triangles.hlsl",
+        compileShader(L"../../../tutorials/TXEllipseMultiThreaded/shaders/Ellipse.hlsl",
                       L"PS_main", L"ps_6_5");
 
     D3DX12_MESH_SHADER_PIPELINE_STATE_DESC psoDesc = {};
