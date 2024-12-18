@@ -42,10 +42,10 @@ private:
   void createPipeline()
   {
     const auto meshShader =
-        compileShader(L"../../../tutorials/TXOctahedronMultiThreadedImproved/shaders/Octahedron.hlsl",
+        compileShader(L"../../../tutorials/TXOctahedronMultiThreaded/shaders/Octahedron.hlsl",
                       L"MS_main", L"ms_6_5");
     const auto pixelShader =
-        compileShader(L"../../../tutorials/TXOctahedronMultiThreadedImproved/shaders/Octahedron.hlsl",
+        compileShader(L"../../../tutorials/TXOctahedronMultiThreaded/shaders/Octahedron.hlsl",
                       L"PS_main", L"ps_6_5");
 
     D3DX12_MESH_SHADER_PIPELINE_STATE_DESC psoDesc = {};
@@ -154,7 +154,7 @@ public:
 int main(int /* argc*/, char /* **argv */)
 {
   gims::DX12AppConfig config;
-  config.title    = L"Tutorial X Octahedron With Mesh Shader Improved";
+  config.title    = L"Tutorial X Octahedron With Mesh Shader";
   config.useVSync = false;  
   try
   {
