@@ -11,10 +11,12 @@ class SphereRenderer : public DX12App
 private:
   struct UiData
   {
-    f32v3 m_backgroundColor = {0.0f, 0.0f, 0.0f};    
+    f32v3 m_backgroundColor = {0.0f, 0.0f, 0.0f};
+    f32   m_customLength    = 0.1f;
   };
 
   UiData m_uiData;
+
 
   ComPtr<ID3D12PipelineState> m_pipelineState;
   ComPtr<ID3D12PipelineState> m_wireFramePipelineState;
@@ -25,7 +27,7 @@ private:
   void createRootSignature()
   {
     CD3DX12_ROOT_PARAMETER rootParameters[1] = {};
-    rootParameters[0].InitAsConstants(32, 0, 0, D3D12_SHADER_VISIBILITY_ALL);
+    rootParameters[0].InitAsConstants(17, 0, 0, D3D12_SHADER_VISIBILITY_ALL);
 
     CD3DX12_ROOT_SIGNATURE_DESC descRootSignature;
     descRootSignature.Init(1, rootParameters, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_NONE);
@@ -54,7 +56,7 @@ private:
     psoDesc.PS                                     = HLSLCompiler::convert(pixelShader);
     psoDesc.RasterizerState                        = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
     psoDesc.RasterizerState.FillMode               = D3D12_FILL_MODE_WIREFRAME;
-    psoDesc.RasterizerState.CullMode               = D3D12_CULL_MODE_NONE;
+    psoDesc.RasterizerState.CullMode               = D3D12_CULL_MODE_BACK;
     psoDesc.BlendState                             = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
     psoDesc.DSVFormat                              = getDX12AppConfig().depthBufferFormat;
     psoDesc.DepthStencilState.DepthEnable          = FALSE;
@@ -136,6 +138,7 @@ public:
     commandList->SetGraphicsRootSignature(m_rootSignature.Get());
     const auto accumulatedTransformation = projectionMatrix * viewMatrix;
     commandList->SetGraphicsRoot32BitConstants(0, 16, &accumulatedTransformation, 0);
+    commandList->SetGraphicsRoot32BitConstants(0, 1, &m_uiData.m_customLength, 16);
     commandList->DispatchMesh(1, 1, 1);
 
   }
@@ -147,6 +150,7 @@ public:
     ImGui::End();    
     ImGui::Begin("Configuration");
     ImGui::ColorEdit3("Background Color", &m_uiData.m_backgroundColor[0]);
+    ImGui::SliderFloat("Custom Length From Center", &m_uiData.m_customLength, 0.1f, 5.0f);
     ImGui::End();        
   }
 };
