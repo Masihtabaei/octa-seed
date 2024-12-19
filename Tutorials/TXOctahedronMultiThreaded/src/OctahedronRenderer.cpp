@@ -42,10 +42,10 @@ private:
   void createPipeline()
   {
     const auto meshShader =
-        compileShader(L"../../../tutorials/TXOctahedronMultiThreadedImproved/shaders/Octahedron.hlsl",
+        compileShader(L"../../../tutorials/TXOctahedronMultiThreaded/shaders/Octahedron.hlsl",
                       L"MS_main", L"ms_6_5");
     const auto pixelShader =
-        compileShader(L"../../../tutorials/TXOctahedronMultiThreadedImproved/shaders/Octahedron.hlsl",
+        compileShader(L"../../../tutorials/TXOctahedronMultiThreaded/shaders/Octahedron.hlsl",
                       L"PS_main", L"ps_6_5");
 
     D3DX12_MESH_SHADER_PIPELINE_STATE_DESC psoDesc = {};
@@ -54,7 +54,7 @@ private:
     psoDesc.PS                                     = HLSLCompiler::convert(pixelShader);
     psoDesc.RasterizerState                        = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
     psoDesc.RasterizerState.FillMode               = D3D12_FILL_MODE_WIREFRAME;
-    psoDesc.RasterizerState.CullMode               = D3D12_CULL_MODE_NONE;
+    psoDesc.RasterizerState.CullMode               = D3D12_CULL_MODE_BACK;
     psoDesc.BlendState                             = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
     psoDesc.DSVFormat                              = getDX12AppConfig().depthBufferFormat;
     psoDesc.DepthStencilState.DepthEnable          = FALSE;
@@ -81,7 +81,7 @@ public:
       : DX12App(createInfo),
       m_examinerController(true)
   {
-    m_examinerController.setTranslationVector(f32v3(0.0f, 0.0f, 4.0f));
+    m_examinerController.setTranslationVector(f32v3(0.0f, 0.0f, 3.0f));
     createRootSignature();
     createPipeline();
   }
