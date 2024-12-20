@@ -11,7 +11,8 @@ class SphereRenderer : public DX12App
 private:
   struct UiData
   {
-    f32v3 m_backgroundColor = {0.0f, 0.0f, 0.0f};    
+    f32v3 m_backgroundColor = {0.0f, 0.0f, 0.0f};
+    i32   m_intraLevelOfDetails = 1;
   };
 
   UiData m_uiData;
@@ -25,7 +26,7 @@ private:
   void createRootSignature()
   {
     CD3DX12_ROOT_PARAMETER rootParameters[1] = {};
-    rootParameters[0].InitAsConstants(32, 0, 0, D3D12_SHADER_VISIBILITY_ALL);
+    rootParameters[0].InitAsConstants(17, 0, 0, D3D12_SHADER_VISIBILITY_ALL);
 
     CD3DX12_ROOT_SIGNATURE_DESC descRootSignature;
     descRootSignature.Init(1, rootParameters, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_NONE);
@@ -132,10 +133,14 @@ public:
         glm::perspectiveFovLH_ZO<f32>(glm::radians(45.0f), (f32)getWidth(), (f32)getHeight(), 0.0001f, 10000.0f);
     const auto viewMatrix = m_examinerController.getTransformationMatrix();
 
+    i32 intraLOD = m_uiData.m_intraLevelOfDetails * 2 + 1;
+
+
     commandList->SetPipelineState(m_pipelineState.Get());
     commandList->SetGraphicsRootSignature(m_rootSignature.Get());
     const auto accumulatedTransformation = projectionMatrix * viewMatrix;
     commandList->SetGraphicsRoot32BitConstants(0, 16, &accumulatedTransformation, 0);
+    commandList->SetGraphicsRoot32BitConstants(0, 1, &intraLOD, 16);
     commandList->DispatchMesh(1, 1, 1);
 
   }
@@ -147,6 +152,7 @@ public:
     ImGui::End();    
     ImGui::Begin("Configuration");
     ImGui::ColorEdit3("Background Color", &m_uiData.m_backgroundColor[0]);
+    ImGui::SliderInt("Intra Level of Detail", &m_uiData.m_intraLevelOfDetails, 1, 5);
     ImGui::End();        
   }
 };
