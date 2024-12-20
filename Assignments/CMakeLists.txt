@@ -1,2 +1,8 @@
-add_subdirectory(./AXUVSphereWithInterLOD)
-set_target_properties (AXUVSphereWithInterLOD PROPERTIES FOLDER assignments)
+add_subdirectory(./AXUVSphereWithIntraLOD)
+set_target_properties (AXUVSphereWithIntraLOD PROPERTIES FOLDER assignments)
+
+add_subdirectory(./AXOctasphereWithIntraLOD)
+set_target_properties (AXOctasphereWithIntraLOD PROPERTIES FOLDER assignments)
+
+add_subdirectory(./AXOctasphereWithInterLOD)
+set_target_properties (AXOctasphereWithInterLOD PROPERTIES FOLDER assignments)

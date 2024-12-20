@@ -24,6 +24,3 @@ set_target_properties (TXRectangleMultiThreaded PROPERTIES FOLDER tutorials)
 
 add_subdirectory(./TXTwoTrianglesMultiThreaded)
 set_target_properties (TXTwoTrianglesMultiThreaded PROPERTIES FOLDER tutorials)
-
-add_subdirectory(./TXOctahedronMultiThreadedImproved)
-set_target_properties (TXOctahedronMultiThreadedImproved PROPERTIES FOLDER tutorials)

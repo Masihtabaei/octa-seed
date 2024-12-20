@@ -12,6 +12,8 @@ private:
   struct UiData
   {
     f32v3 m_backgroundColor = {0.0f, 0.0f, 0.0f};    
+    float m_radius            = 1.0f;
+    int  m_interSphereLOD = 1;
   };
 
   UiData m_uiData;
@@ -25,7 +27,7 @@ private:
   void createRootSignature()
   {
     CD3DX12_ROOT_PARAMETER rootParameters[1] = {};
-    rootParameters[0].InitAsConstants(32, 0, 0, D3D12_SHADER_VISIBILITY_ALL);
+    rootParameters[0].InitAsConstants(18, 0, 0, D3D12_SHADER_VISIBILITY_ALL);
 
     CD3DX12_ROOT_SIGNATURE_DESC descRootSignature;
     descRootSignature.Init(1, rootParameters, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_NONE);
@@ -42,10 +44,10 @@ private:
   void createPipeline()
   {
     const auto meshShader =
-        compileShader(L"../../../tutorials/TXOctahedronMultiThreaded/shaders/Octahedron.hlsl",
+        compileShader(L"../../../assignments/AXUVSphereWithIntraLOD/shaders/Sphere.hlsl",
                       L"MS_main", L"ms_6_5");
     const auto pixelShader =
-        compileShader(L"../../../tutorials/TXOctahedronMultiThreaded/shaders/Octahedron.hlsl",
+        compileShader(L"../../../assignments/AXUVSphereWithIntraLOD/Shaders/Sphere.hlsl",
                       L"PS_main", L"ps_6_5");
 
     D3DX12_MESH_SHADER_PIPELINE_STATE_DESC psoDesc = {};
@@ -136,7 +138,9 @@ public:
     commandList->SetGraphicsRootSignature(m_rootSignature.Get());
     const auto accumulatedTransformation = projectionMatrix * viewMatrix;
     commandList->SetGraphicsRoot32BitConstants(0, 16, &accumulatedTransformation, 0);
-    commandList->DispatchMesh(1, 1, 1);
+    commandList->SetGraphicsRoot32BitConstants(0, 1, &m_uiData.m_radius, 16);
+    commandList->SetGraphicsRoot32BitConstants(0, 1, &m_uiData.m_interSphereLOD, 17);
+    commandList->DispatchMesh(m_uiData.m_interSphereLOD, m_uiData.m_interSphereLOD, 1);
 
   }
 
@@ -147,6 +151,8 @@ public:
     ImGui::End();    
     ImGui::Begin("Configuration");
     ImGui::ColorEdit3("Background Color", &m_uiData.m_backgroundColor[0]);
+    ImGui::SliderFloat("Radius", &m_uiData.m_radius, 0.1f, 1.0f);
+    ImGui::SliderInt("Inter Sphere LOD", &m_uiData.m_interSphereLOD, 1, 18);
     ImGui::End();        
   }
 };
@@ -154,7 +160,7 @@ public:
 int main(int /* argc*/, char /* **argv */)
 {
   gims::DX12AppConfig config;
-  config.title    = L"Tutorial X Octahedron With Mesh Shader";
+  config.title    = L"Assignmeent X UV Sphere With Inter LOD";
   config.useVSync = false;  
   try
   {
