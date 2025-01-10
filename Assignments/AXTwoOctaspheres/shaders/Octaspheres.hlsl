@@ -1,4 +1,4 @@
-#define NUM_THREADS_X 9
+ #define NUM_THREADS_X 9
 #define NUM_THREADS_Y 9
 #define NUM_THREADS_Z 1
 
