@@ -11,7 +11,8 @@ class SphereRenderer : public DX12App
 private:
   struct UiData
   {
-    f32v3 m_backgroundColor = {0.0f, 0.0f, 0.0f};    
+    f32v3 m_backgroundColor = {0.0f, 0.0f, 0.0f};
+    i32  m_interLOD        = 1;
   };
 
   UiData m_uiData;
@@ -19,6 +20,7 @@ private:
   ComPtr<ID3D12PipelineState> m_pipelineState;
   ComPtr<ID3D12PipelineState> m_wireFramePipelineState;
   ComPtr<ID3D12RootSignature> m_rootSignature;
+  std::vector<ComPtr<ID3D12PipelineState>> m_pipelines;
 
   gims::ExaminerController m_examinerController;
 
@@ -39,14 +41,14 @@ private:
     std::cout << "Root signature created successfully!" << std::endl;
   }
 
-  void createPipeline()
+  void createPipeline(uint8_t interLOD)
   {
-    const auto meshShader =
-        compileShader(L"../../../assignments/AXOctasphereWithInterLOD/shaders/Octasphere.hlsl",
-                      L"MS_main", L"ms_6_5");
+    std::wstring interLODAsString = L"-DNUM_OCTASPHERES=" + std::to_wstring(interLOD);
+    const auto   meshShader = compileShader(L"../../../assignments/AXOctasphereWithInterLOD/shaders/Octaspheres.hlsl",
+                                                  L"MS_main", L"ms_6_5", {interLODAsString.c_str()});
     const auto pixelShader =
-        compileShader(L"../../../assignments/AXOctasphereWithInterLOD/shaders/Octasphere.hlsl",
-                      L"PS_main", L"ps_6_5");
+        compileShader(L"../../../assignments/AXOctasphereWithInterLOD/shaders/Octaspheres.hlsl", 
+            L"PS_main", L"ps_6_5", {interLODAsString.c_str()});
 
     D3DX12_MESH_SHADER_PIPELINE_STATE_DESC psoDesc = {};
     psoDesc.pRootSignature                         = m_rootSignature.Get();
@@ -71,7 +73,7 @@ private:
     streamDesc.pPipelineStateSubobjectStream = &psoStream;
     streamDesc.SizeInBytes                   = sizeof(psoStream);
 
-    throwIfFailed(getDevice()->CreatePipelineState(&streamDesc, IID_PPV_ARGS(&m_pipelineState)));
+    throwIfFailed(getDevice()->CreatePipelineState(&streamDesc, IID_PPV_ARGS(&m_pipelines.at(interLOD - 1))));
 
     std::cout << "Pipeline created successfully!" << std::endl;
   }
@@ -83,7 +85,9 @@ public:
   {
     m_examinerController.setTranslationVector(f32v3(-1.25f, 0.0f, 5.0f));
     createRootSignature();
-    createPipeline();
+    m_pipelines.resize(28);
+    for (uint8_t i = 0; i < 28; i++)
+        createPipeline(i + 1);
   }
 
   void checkForMeshShaderSupport()
@@ -132,7 +136,7 @@ public:
         glm::perspectiveFovLH_ZO<f32>(glm::radians(45.0f), (f32)getWidth(), (f32)getHeight(), 0.0001f, 10000.0f);
     const auto viewMatrix = m_examinerController.getTransformationMatrix();
 
-    commandList->SetPipelineState(m_pipelineState.Get());
+    commandList->SetPipelineState(m_pipelines.at(m_uiData.m_interLOD - 1).Get());
     commandList->SetGraphicsRootSignature(m_rootSignature.Get());
     const auto accumulatedTransformation = projectionMatrix * viewMatrix;
     commandList->SetGraphicsRoot32BitConstants(0, 16, &accumulatedTransformation, 0);
@@ -147,6 +151,7 @@ public:
     ImGui::End();    
     ImGui::Begin("Configuration");
     ImGui::ColorEdit3("Background Color", &m_uiData.m_backgroundColor[0]);
+    ImGui::SliderInt("Inter LOD", &m_uiData.m_interLOD, 1, 28);
     ImGui::End();        
   }
 };
@@ -154,7 +159,7 @@ public:
 int main(int /* argc*/, char /* **argv */)
 {
   gims::DX12AppConfig config;
-  config.title    = L"Assignment X Octasphere With Inter LOD";
+  config.title    = L"Assignment X Octaspheres With Inter LOD";
   config.useVSync = false;  
   try
   {
