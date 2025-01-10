@@ -42,10 +42,10 @@ private:
   void createPipeline()
   {
     const auto meshShader =
-        compileShader(L"../../../assignments/AXOctasphereWithInterLOD/shaders/Octasphere.hlsl",
+        compileShader(L"../../../assignments/AXThreeOctaspheres/shaders/Octaspheres.hlsl",
                       L"MS_main", L"ms_6_5");
     const auto pixelShader =
-        compileShader(L"../../../assignments/AXOctasphereWithInterLOD/shaders/Octasphere.hlsl",
+        compileShader(L"../../../assignments/AXThreeOctaspheres/shaders/Octaspheres.hlsl",
                       L"PS_main", L"ps_6_5");
 
     D3DX12_MESH_SHADER_PIPELINE_STATE_DESC psoDesc = {};
@@ -154,7 +154,7 @@ public:
 int main(int /* argc*/, char /* **argv */)
 {
   gims::DX12AppConfig config;
-  config.title    = L"Assignment X Octasphere With Inter LOD";
+  config.title    = L"Assignment X Three Octaspheres";
   config.useVSync = false;  
   try
   {

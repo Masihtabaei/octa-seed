@@ -1,11 +1,17 @@
-#define NUM_THREADS_X 9
-#define NUM_THREADS_Y 9
+#define APPROX_SQRT(n) ((n) >= 64 ? 8 : (n) >= 49 ? 7 : (n) >= 36 ? 6 : (n) >= 25 ? 5 : (n) >= 16 ? 4 : (n) >= 4 ? 3 : 1)
+
+#define NUM_OCTASPHERES 28
+#define MAX_THREADS 128
+#define MAX_VERTICES 256
+#define MAX_TRIANGLES 256
+
+#define NUM_THREADS_X APPROX_SQRT(MAX_THREADS / NUM_OCTASPHERES)
+#define NUM_THREADS_Y NUM_THREADS_X
 #define NUM_THREADS_Z 1
 
-#define NUM_OCTASPHERES 2
+#define MAX_NUM_VERTICES (NUM_OCTASPHERES * NUM_THREADS_X * NUM_THREADS_Y)
+#define MAX_NUM_TRIANGLES (2 * NUM_OCTASPHERES * ((NUM_THREADS_X - 1) * (NUM_THREADS_Y - 1)))
 
-#define MAX_NUM_VERTICES NUM_OCTASPHERES * NUM_THREADS_X * NUM_THREADS_Y
-#define MAX_NUM_TRIANGLES 2 * NUM_OCTASPHERES * ((NUM_THREADS_X - 1) * (NUM_THREADS_Y - 1))
 
 static const float3 userDefinedColor = float3(1.0f, 0.0f, 0.0f);
 
@@ -58,26 +64,28 @@ void MS_main(
     float xCoordinate = map(threadIdInsideItsGroup.x, 0.0f, NUM_THREADS_X - 1, -1.0f, 1.0f);
     float yCoordinate = map(threadIdInsideItsGroup.y, 0.0f, NUM_THREADS_Y - 1, -1.0f, 1.0f);
     float3 decodedResults = octDecode(float2(xCoordinate, yCoordinate));
-    triangleVertices[threadIdInsideItsGroup.y * NUM_THREADS_X + threadIdInsideItsGroup.x].position = mul(transformationMatrix, float4(decodedResults.x, decodedResults.y, decodedResults.z, 1.0f));
-    triangleVertices[threadIdInsideItsGroup.y * NUM_THREADS_X + threadIdInsideItsGroup.x + (MAX_NUM_VERTICES / 2)].position = mul(transformationMatrix, float4(decodedResults.x + 2.5f, decodedResults.y, decodedResults.z, 1.0f));
+    for (int i = 0; i < NUM_OCTASPHERES; i++)
+    {
+        triangleVertices[threadIdInsideItsGroup.y * NUM_THREADS_X + threadIdInsideItsGroup.x + i * (MAX_NUM_VERTICES / NUM_OCTASPHERES)].position = mul(transformationMatrix, float4(decodedResults.x + i * 2.5f, decodedResults.y, decodedResults.z, 1.0f));        
+    }
     if ((threadIdInsideItsGroup.x < (NUM_THREADS_X - 1)) && (threadIdInsideItsGroup.y < (NUM_THREADS_Y - 1)))
     {
-        for (int i = 0; i < 2; i++)
+        for (int i = 0; i < NUM_OCTASPHERES; i++)
         {
-            uint currentVertexID = threadIdInsideItsGroup.y * NUM_THREADS_X + threadIdInsideItsGroup.x + i * (MAX_NUM_VERTICES / 2);
+            uint currentVertexID = threadIdInsideItsGroup.y * NUM_THREADS_X + threadIdInsideItsGroup.x + i * (MAX_NUM_VERTICES / NUM_OCTASPHERES);
             uint nextMostRightVertexID = currentVertexID + 1;
             uint nextMostBottomVertexID = currentVertexID + NUM_THREADS_X;
             uint nextMostBottomRightVertexID = nextMostBottomVertexID + 1;
             if ((threadIdInsideItsGroup.x < (NUM_THREADS_X / 2) && threadIdInsideItsGroup.y < (NUM_THREADS_Y / 2)) || (threadIdInsideItsGroup.x >= (NUM_THREADS_X / 2)
              && threadIdInsideItsGroup.y >= (NUM_THREADS_Y / 2)))
             {
-                triangleIndices[2 * (threadIdInsideItsGroup.y * (NUM_THREADS_X - 1) + threadIdInsideItsGroup.x) + i * (MAX_NUM_TRIANGLES / 2)] = uint3(currentVertexID, nextMostRightVertexID, nextMostBottomVertexID);
-                triangleIndices[2 * (threadIdInsideItsGroup.y * (NUM_THREADS_X - 1) + threadIdInsideItsGroup.x) + 1 + i * (MAX_NUM_TRIANGLES / 2)] = uint3(nextMostRightVertexID, nextMostBottomRightVertexID, nextMostBottomVertexID);
+                triangleIndices[2 * (threadIdInsideItsGroup.y * (NUM_THREADS_X - 1) + threadIdInsideItsGroup.x) + i * (MAX_NUM_TRIANGLES / NUM_OCTASPHERES)] = uint3(currentVertexID, nextMostRightVertexID, nextMostBottomVertexID);
+                triangleIndices[2 * (threadIdInsideItsGroup.y * (NUM_THREADS_X - 1) + threadIdInsideItsGroup.x) + 1 + i * (MAX_NUM_TRIANGLES / NUM_OCTASPHERES)] = uint3(nextMostRightVertexID, nextMostBottomRightVertexID, nextMostBottomVertexID);
             }
             else
             {
-                triangleIndices[2 * (threadIdInsideItsGroup.y * (NUM_THREADS_X - 1) + threadIdInsideItsGroup.x) + i * (MAX_NUM_TRIANGLES / 2)] = uint3(currentVertexID, nextMostRightVertexID, nextMostBottomRightVertexID);
-                triangleIndices[2 * (threadIdInsideItsGroup.y * (NUM_THREADS_X - 1) + threadIdInsideItsGroup.x) + 1 + i * (MAX_NUM_TRIANGLES / 2)] = uint3(nextMostBottomRightVertexID, nextMostBottomVertexID, currentVertexID);
+                triangleIndices[2 * (threadIdInsideItsGroup.y * (NUM_THREADS_X - 1) + threadIdInsideItsGroup.x) + i * (MAX_NUM_TRIANGLES / NUM_OCTASPHERES)] = uint3(currentVertexID, nextMostRightVertexID, nextMostBottomRightVertexID);
+                triangleIndices[2 * (threadIdInsideItsGroup.y * (NUM_THREADS_X - 1) + threadIdInsideItsGroup.x) + 1 + i * (MAX_NUM_TRIANGLES / NUM_OCTASPHERES)] = uint3(nextMostBottomRightVertexID, nextMostBottomVertexID, currentVertexID);
             }
         }
     }
