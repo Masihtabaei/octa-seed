@@ -1,6 +1,5 @@
 #define APPROX_SQRT(n) ((n) >= 64 ? 8 : (n) >= 49 ? 7 : (n) >= 36 ? 6 : (n) >= 25 ? 5 : (n) >= 16 ? 4 : (n) >= 4 ? 3 : 1)
 
-#define NUM_OCTASPHERES 28
 #define MAX_THREADS 128
 #define MAX_VERTICES 256
 #define MAX_TRIANGLES 256

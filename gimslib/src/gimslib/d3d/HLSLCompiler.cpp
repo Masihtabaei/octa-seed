@@ -44,7 +44,7 @@ HLSLCompiler::HLSLCompiler()
 }
 
 ComPtr<IDxcBlob> HLSLCompiler::compileShader(const std::filesystem::path& shaderFile, const wchar_t* targetProfile,
-                                             const wchar_t* entryPoint)
+                                             const wchar_t* entryPoint, std::vector<const wchar_t*> userArguments)
 {
   ComPtr<IDxcBlobEncoding> sourceCode;
   if (FAILED(m_utils->LoadFile(shaderFile.wstring().c_str(), nullptr, &sourceCode)))
@@ -52,8 +52,7 @@ ComPtr<IDxcBlob> HLSLCompiler::compileShader(const std::filesystem::path& shader
     throw std::runtime_error("Unable to load " + shaderFile.string());
   }
 
-  std::vector<const wchar_t*> userArguments = {};
-  std::vector<DxcDefine>      userDefines   = {};
+  std::vector<DxcDefine> userDefines = {};
 
   ComPtr<IDxcCompilerArgs> arguments;
   m_utils->BuildArguments(shaderFile.wstring().c_str(), entryPoint, targetProfile, userArguments.data(),

@@ -13,7 +13,8 @@ public:
   HLSLCompiler();
 
   ComPtr<IDxcBlob> compileShader(const std::filesystem::path& shaderFile, const wchar_t* targetProfile,
-                                 const wchar_t* entryPoint);
+                                 const wchar_t*              entryPoint,
+                                 std::vector<const wchar_t*> userArguments);
 
   static D3D12_SHADER_BYTECODE convert(ComPtr<IDxcBlob> in);
 

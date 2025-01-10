@@ -75,6 +75,9 @@ public:
 
   ComPtr<IDxcBlob> compileShader(const std::filesystem::path&            shaderFile,
                                  const wchar_t* entryPoint, const wchar_t* targetProfile);
+
+  ComPtr<IDxcBlob> compileShader(const std::filesystem::path& shaderFile, const wchar_t* entryPoint,
+                                          const wchar_t* targetProfile, std::vector<const wchar_t*> userArguments);
   
   LRESULT windowProcHandler(UINT message, WPARAM wParam, LPARAM lParam);
 

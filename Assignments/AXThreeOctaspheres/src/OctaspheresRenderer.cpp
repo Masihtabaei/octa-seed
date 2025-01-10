@@ -42,11 +42,11 @@ private:
   void createPipeline()
   {
     const auto meshShader =
-        compileShader(L"../../../assignments/AXThreeOctaspheres/shaders/Octaspheres.hlsl",
-                      L"MS_main", L"ms_6_5");
+        compileShader(L"../../../assignments/AXThreeOctaspheres/shaders/Octaspheres.hlsl", L"MS_main", L"ms_6_5",
+                      {L"-DNUM_OCTASPHERES=3"});
     const auto pixelShader =
         compileShader(L"../../../assignments/AXThreeOctaspheres/shaders/Octaspheres.hlsl",
-                      L"PS_main", L"ps_6_5");
+                                           L"PS_main", L"ps_6_5", {L"-DNUM_OCTASPHERES=3"});
 
     D3DX12_MESH_SHADER_PIPELINE_STATE_DESC psoDesc = {};
     psoDesc.pRootSignature                         = m_rootSignature.Get();

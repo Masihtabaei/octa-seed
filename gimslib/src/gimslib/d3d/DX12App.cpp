@@ -340,7 +340,13 @@ const D3D12_RECT& DX12App::getRectScissor() const
 ComPtr<IDxcBlob> DX12App::compileShader(const std::filesystem::path& shaderFile, const wchar_t* entryPoint,
                                         const wchar_t* targetProfile)
 {
-  return m_hlslCompiler.compileShader(shaderFile, targetProfile, entryPoint);
+  return m_hlslCompiler.compileShader(shaderFile, targetProfile, entryPoint, {});
+}
+
+ComPtr<IDxcBlob> DX12App::compileShader(const std::filesystem::path& shaderFile, const wchar_t* entryPoint,
+                                        const wchar_t* targetProfile, std::vector<const wchar_t*> userArguments)
+{
+  return m_hlslCompiler.compileShader(shaderFile, targetProfile, entryPoint, userArguments);
 }
 
 void DX12App::onDraw()
