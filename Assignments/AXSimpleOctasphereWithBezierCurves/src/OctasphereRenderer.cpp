@@ -12,7 +12,7 @@ private:
   struct UiData
   {
     f32v3 m_backgroundColor = {0.0f, 0.0f, 0.0f};
-    i32  m_interLOD        = 1;
+    i32   m_intraLevelOfDetails = 5;
   };
 
   UiData m_uiData;
@@ -20,14 +20,13 @@ private:
   ComPtr<ID3D12PipelineState> m_pipelineState;
   ComPtr<ID3D12PipelineState> m_wireFramePipelineState;
   ComPtr<ID3D12RootSignature> m_rootSignature;
-  std::vector<ComPtr<ID3D12PipelineState>> m_pipelines;
 
   gims::ExaminerController m_examinerController;
 
   void createRootSignature()
   {
     CD3DX12_ROOT_PARAMETER rootParameters[1] = {};
-    rootParameters[0].InitAsConstants(32, 0, 0, D3D12_SHADER_VISIBILITY_ALL);
+    rootParameters[0].InitAsConstants(17, 0, 0, D3D12_SHADER_VISIBILITY_ALL);
 
     CD3DX12_ROOT_SIGNATURE_DESC descRootSignature;
     descRootSignature.Init(1, rootParameters, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_NONE);
@@ -41,15 +40,14 @@ private:
     std::cout << "Root signature created successfully!" << std::endl;
   }
 
-
-  void createPipeline(uint8_t interLOD)
+  void createPipeline()
   {
-    std::wstring interLODAsString = L"-DNUM_OCTASPHERES=" + std::to_wstring(interLOD);
-    const auto   meshShader = compileShader(L"../../../assignments/AXOctasphereWithInterLOD/shaders/Octaspheres.hlsl",
-                                                  L"MS_main", L"ms_6_5", {interLODAsString.c_str()});
+    const auto meshShader =
+        compileShader(L"../../../assignments/AXSimpleOctasphereWithBezierCurves/shaders/Octasphere.hlsl",
+                      L"MS_main", L"ms_6_5");
     const auto pixelShader =
-        compileShader(L"../../../assignments/AXOctasphereWithInterLOD/shaders/Octaspheres.hlsl", 
-            L"PS_main", L"ps_6_5", {interLODAsString.c_str()});
+        compileShader(L"../../../assignments/AXSimpleOctasphereWithBezierCurves/shaders/Octasphere.hlsl",
+                      L"PS_main", L"ps_6_5");
 
     D3DX12_MESH_SHADER_PIPELINE_STATE_DESC psoDesc = {};
     psoDesc.pRootSignature                         = m_rootSignature.Get();
@@ -74,7 +72,7 @@ private:
     streamDesc.pPipelineStateSubobjectStream = &psoStream;
     streamDesc.SizeInBytes                   = sizeof(psoStream);
 
-    throwIfFailed(getDevice()->CreatePipelineState(&streamDesc, IID_PPV_ARGS(&m_pipelines.at(interLOD - 1))));
+    throwIfFailed(getDevice()->CreatePipelineState(&streamDesc, IID_PPV_ARGS(&m_pipelineState)));
 
     std::cout << "Pipeline created successfully!" << std::endl;
   }
@@ -84,11 +82,9 @@ public:
       : DX12App(createInfo),
       m_examinerController(true)
   {
-    m_examinerController.setTranslationVector(f32v3(-1.25f, 0.0f, 5.0f));
+    m_examinerController.setTranslationVector(f32v3(0.0f, 0.0f, 3.0f));
     createRootSignature();
-    m_pipelines.resize(28);
-    for (uint8_t i = 0; i < 28; i++)
-        createPipeline(i + 1);
+    createPipeline();
   }
 
   void checkForMeshShaderSupport()
@@ -137,10 +133,14 @@ public:
         glm::perspectiveFovLH_ZO<f32>(glm::radians(45.0f), (f32)getWidth(), (f32)getHeight(), 0.0001f, 10000.0f);
     const auto viewMatrix = m_examinerController.getTransformationMatrix();
 
-    commandList->SetPipelineState(m_pipelines.at(m_uiData.m_interLOD - 1).Get());
+    i32 intraLOD = m_uiData.m_intraLevelOfDetails * 2 + 1;
+
+
+    commandList->SetPipelineState(m_pipelineState.Get());
     commandList->SetGraphicsRootSignature(m_rootSignature.Get());
     const auto accumulatedTransformation = projectionMatrix * viewMatrix;
     commandList->SetGraphicsRoot32BitConstants(0, 16, &accumulatedTransformation, 0);
+    commandList->SetGraphicsRoot32BitConstants(0, 1, &intraLOD, 16);
     commandList->DispatchMesh(1, 1, 1);
 
   }
@@ -152,7 +152,7 @@ public:
     ImGui::End();    
     ImGui::Begin("Configuration");
     ImGui::ColorEdit3("Background Color", &m_uiData.m_backgroundColor[0]);
-    ImGui::SliderInt("Inter LOD", &m_uiData.m_interLOD, 1, 28);
+    ImGui::SliderInt("Intra Level of Detail", &m_uiData.m_intraLevelOfDetails, 1, 5);
     ImGui::End();        
   }
 };
@@ -160,7 +160,7 @@ public:
 int main(int /* argc*/, char /* **argv */)
 {
   gims::DX12AppConfig config;
-  config.title    = L"Assignment X Octaspheres With Inter LOD";
+  config.title    = L"Assignment X Simple Octasphere With Bezier Curves";
   config.useVSync = false;  
   try
   {
