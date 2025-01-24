@@ -1,8 +1,8 @@
 #include <gimslib/d3d/DX12App.hpp>
 #include <gimslib/d3d/DX12Util.hpp>
 #include <gimslib/types.hpp>
-#include <imgui.h>
 #include <gimslib/ui/ExaminerController.hpp>
+#include <imgui.h>
 #include <iostream>
 using namespace gims;
 
@@ -11,8 +11,12 @@ class SphereRenderer : public DX12App
 private:
   struct UiData
   {
-    f32v3 m_backgroundColor = {0.0f, 0.0f, 0.0f};
+    f32v3 m_backgroundColor     = {0.0f, 0.0f, 0.0f};
     i32   m_intraLevelOfDetails = 5;
+    f32v3 m_firstControlPoint   = f32v3(0.0f, 0.0f, -0.3f);
+    f32v3 m_secondControlPoint  = f32v3(1.0f, 0.0f, -0.7f);
+    f32v3 m_thirdControlPoint   = f32v3(1.0f, 0.0f, 0.3f);
+    f32v3 m_fourthControlPoint  = f32v3(0.f, 0.0f, 1.0f);
   };
 
   UiData m_uiData;
@@ -26,7 +30,7 @@ private:
   void createRootSignature()
   {
     CD3DX12_ROOT_PARAMETER rootParameters[1] = {};
-    rootParameters[0].InitAsConstants(17, 0, 0, D3D12_SHADER_VISIBILITY_ALL);
+    rootParameters[0].InitAsConstants(33, 0, 0, D3D12_SHADER_VISIBILITY_ALL);
 
     CD3DX12_ROOT_SIGNATURE_DESC descRootSignature;
     descRootSignature.Init(1, rootParameters, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_NONE);
@@ -42,12 +46,10 @@ private:
 
   void createPipeline()
   {
-    const auto meshShader =
-        compileShader(L"../../../assignments/AXSimpleOctasphereWithBezierCurves/shaders/Octasphere.hlsl",
-                      L"MS_main", L"ms_6_5");
-    const auto pixelShader =
-        compileShader(L"../../../assignments/AXSimpleOctasphereWithBezierCurves/shaders/Octasphere.hlsl",
-                      L"PS_main", L"ps_6_5");
+    const auto meshShader = compileShader(
+        L"../../../assignments/AXSimpleOctasphereWithBezierCurves/shaders/Octasphere.hlsl", L"MS_main", L"ms_6_5");
+    const auto pixelShader = compileShader(
+        L"../../../assignments/AXSimpleOctasphereWithBezierCurves/shaders/Octasphere.hlsl", L"PS_main", L"ps_6_5");
 
     D3DX12_MESH_SHADER_PIPELINE_STATE_DESC psoDesc = {};
     psoDesc.pRootSignature                         = m_rootSignature.Get();
@@ -79,8 +81,8 @@ private:
 
 public:
   SphereRenderer(const DX12AppConfig createInfo)
-      : DX12App(createInfo),
-      m_examinerController(true)
+      : DX12App(createInfo)
+      , m_examinerController(true)
   {
     m_examinerController.setTranslationVector(f32v3(0.0f, 0.0f, 3.0f));
     createRootSignature();
@@ -120,12 +122,12 @@ public:
     const auto rtvHandle   = getRTVHandle();
     const auto dsvHandle   = getDSVHandle();
     commandList->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
-    
-    f32v4 clearColor = {m_uiData.m_backgroundColor[0], m_uiData.m_backgroundColor[1], m_uiData.m_backgroundColor[2], 1.0f};
+
+    f32v4 clearColor = {m_uiData.m_backgroundColor[0], m_uiData.m_backgroundColor[1], m_uiData.m_backgroundColor[2],
+                        1.0f};
     commandList->ClearRenderTargetView(rtvHandle, &clearColor.x, 0, nullptr);
     commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
-    
-    
+
     commandList->RSSetViewports(1, &getViewport());
     commandList->RSSetScissorRects(1, &getRectScissor());
 
@@ -135,25 +137,40 @@ public:
 
     i32 intraLOD = m_uiData.m_intraLevelOfDetails * 2 + 1;
 
-
     commandList->SetPipelineState(m_pipelineState.Get());
     commandList->SetGraphicsRootSignature(m_rootSignature.Get());
-    const auto accumulatedTransformation = projectionMatrix * viewMatrix;
-    commandList->SetGraphicsRoot32BitConstants(0, 16, &accumulatedTransformation, 0);
-    commandList->SetGraphicsRoot32BitConstants(0, 1, &intraLOD, 16);
-    commandList->DispatchMesh(1, 1, 1);
 
+    const auto accumulatedTransformation = projectionMatrix * viewMatrix;
+
+    commandList->SetGraphicsRoot32BitConstants(0, 16, &accumulatedTransformation, 0);
+
+    auto m = f32v4(m_uiData.m_firstControlPoint, 0.0f);
+    auto n = f32v4(m_uiData.m_secondControlPoint, 0.0f);
+    auto p = f32v4(m_uiData.m_thirdControlPoint, 0.0f);
+    auto q = f32v4(m_uiData.m_fourthControlPoint, 0.0f);
+    commandList->SetGraphicsRoot32BitConstants(0, 4, &m, 16);
+    commandList->SetGraphicsRoot32BitConstants(0, 4, &n, 20);
+    commandList->SetGraphicsRoot32BitConstants(0, 4, &p, 24);
+    commandList->SetGraphicsRoot32BitConstants(0, 4, &q, 28);
+
+    commandList->SetGraphicsRoot32BitConstants(0, 1, &intraLOD, 32);
+
+    commandList->DispatchMesh(1, 1, 1);
   }
 
   virtual void onDrawUI()
   {
     ImGui::Begin("Information");
     ImGui::Text("Frame time: %f", 1.0f / ImGui::GetIO().Framerate * 1000.0f);
-    ImGui::End();    
+    ImGui::End();
     ImGui::Begin("Configuration");
     ImGui::ColorEdit3("Background Color", &m_uiData.m_backgroundColor[0]);
     ImGui::SliderInt("Intra Level of Detail", &m_uiData.m_intraLevelOfDetails, 1, 5);
-    ImGui::End();        
+    ImGui::SliderFloat3("First Control Point", &m_uiData.m_firstControlPoint.x, -5, 5);
+    ImGui::SliderFloat3("Second Control Point", &m_uiData.m_secondControlPoint.x, -5, 5);
+    ImGui::SliderFloat3("Third Control Point", &m_uiData.m_thirdControlPoint.x, -5, 5);
+    ImGui::SliderFloat3("Foruth Control Point", &m_uiData.m_fourthControlPoint.x, -5, 5);
+    ImGui::End();
   }
 };
 
@@ -161,7 +178,7 @@ int main(int /* argc*/, char /* **argv */)
 {
   gims::DX12AppConfig config;
   config.title    = L"Assignment X Simple Octasphere With Bezier Curves";
-  config.useVSync = false;  
+  config.useVSync = false;
   try
   {
     SphereRenderer app(config);
