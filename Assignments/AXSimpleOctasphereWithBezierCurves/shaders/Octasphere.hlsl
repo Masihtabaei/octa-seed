@@ -85,11 +85,10 @@ void MS_main(
         float3 evaluatedCoordinates = evaluateCubicBezierCurve(t);
         float2 sc = float2(0.0f, 0.0f);
         
-        //sc = normalize(decodedCoordinates.yx);
-        //evaluatedCoordinates.xy = mul(float2x2(sc.y, -sc.x, sc.x, sc.y), evaluatedCoordinates.xy);
-   
-        float2 angle = atan2(decodedCoordinates.y, decodedCoordinates.x);
-        evaluatedCoordinates.xy = mul(float2x2(cos(angle.x), -sin(angle.x), sin(angle.x), cos(angle.x)), evaluatedCoordinates.xy);
+        sc = normalize(decodedCoordinates.yx);
+        sc.x = clamp(sc.x, -1.0f, 1.0f);
+        sc.y = sqrt(1 - sc.x * sc.x) * signNotZero(sc.y);
+        evaluatedCoordinates.xy = mul(float2x2(sc.y, -sc.x, sc.x, sc.y), evaluatedCoordinates.xy);
         
         triangleVertices[threadIdInsideItsGroup.y * intraLOD + threadIdInsideItsGroup.x].position = mul(transformationMatrix, float4(evaluatedCoordinates, 1.0f));
 
