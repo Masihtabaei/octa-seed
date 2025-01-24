@@ -6,7 +6,8 @@ static const float3 userDefinedColor = float3(1.0f, 0.0f, 0.0f);
 
 cbuffer PerMeshConstants : register(b0)
 {
-    float4x4 transformationMatrix;
+    float4x4 viewMatrix;
+    float4x4 projectionMatrix;
     float4 p0;
     float4 p1;
     float4 p2;
@@ -90,7 +91,7 @@ void MS_main(
         sc.y = sqrt(1 - sc.x * sc.x) * signNotZero(sc.y);
         evaluatedCoordinates.xy = mul(float2x2(sc.y, -sc.x, sc.x, sc.y), evaluatedCoordinates.xy);
         
-        triangleVertices[threadIdInsideItsGroup.y * intraLOD + threadIdInsideItsGroup.x].position = mul(transformationMatrix, float4(evaluatedCoordinates, 1.0f));
+        triangleVertices[threadIdInsideItsGroup.y * intraLOD + threadIdInsideItsGroup.x].position = mul(projectionMatrix, mul(viewMatrix, float4(evaluatedCoordinates, 1.0f)));
 
         if ((threadIdInsideItsGroup.x < (intraLOD - 1)) && (threadIdInsideItsGroup.y < (intraLOD - 1)))
         {

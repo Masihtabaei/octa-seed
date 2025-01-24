@@ -30,7 +30,7 @@ private:
   void createRootSignature()
   {
     CD3DX12_ROOT_PARAMETER rootParameters[1] = {};
-    rootParameters[0].InitAsConstants(33, 0, 0, D3D12_SHADER_VISIBILITY_ALL);
+    rootParameters[0].InitAsConstants(49, 0, 0, D3D12_SHADER_VISIBILITY_ALL);
 
     CD3DX12_ROOT_SIGNATURE_DESC descRootSignature;
     descRootSignature.Init(1, rootParameters, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_NONE);
@@ -142,18 +142,19 @@ public:
 
     const auto accumulatedTransformation = projectionMatrix * viewMatrix;
 
-    commandList->SetGraphicsRoot32BitConstants(0, 16, &accumulatedTransformation, 0);
+    commandList->SetGraphicsRoot32BitConstants(0, 16, &viewMatrix, 0);
+    commandList->SetGraphicsRoot32BitConstants(0, 16, &projectionMatrix, 16);
 
     auto m = f32v4(m_uiData.m_firstControlPoint, 0.0f);
     auto n = f32v4(m_uiData.m_secondControlPoint, 0.0f);
     auto p = f32v4(m_uiData.m_thirdControlPoint, 0.0f);
     auto q = f32v4(m_uiData.m_fourthControlPoint, 0.0f);
-    commandList->SetGraphicsRoot32BitConstants(0, 4, &m, 16);
-    commandList->SetGraphicsRoot32BitConstants(0, 4, &n, 20);
-    commandList->SetGraphicsRoot32BitConstants(0, 4, &p, 24);
-    commandList->SetGraphicsRoot32BitConstants(0, 4, &q, 28);
+    commandList->SetGraphicsRoot32BitConstants(0, 4, &m, 32);
+    commandList->SetGraphicsRoot32BitConstants(0, 4, &n, 36);
+    commandList->SetGraphicsRoot32BitConstants(0, 4, &p, 40);
+    commandList->SetGraphicsRoot32BitConstants(0, 4, &q, 44);
 
-    commandList->SetGraphicsRoot32BitConstants(0, 1, &intraLOD, 32);
+    commandList->SetGraphicsRoot32BitConstants(0, 1, &intraLOD, 48);
 
     commandList->DispatchMesh(1, 1, 1);
   }
