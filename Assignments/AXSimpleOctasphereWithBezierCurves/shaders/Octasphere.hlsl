@@ -82,7 +82,7 @@ void MS_main(
         float3 decodedCoordinates = octDecode(float2(xCoordinate, yCoordinate));
 
         float t = (decodedCoordinates.z + 1.0f) / 2;
-        float3 evaluatedCoordinates = evaluateQuadraticBezier(t);
+        float3 evaluatedCoordinates = evaluateCubicBezierCurve(t);
         float2 sc = float2(0.0f, 0.0f);
         
         //sc = normalize(decodedCoordinates.yx);
