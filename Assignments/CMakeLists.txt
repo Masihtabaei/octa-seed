@@ -12,3 +12,6 @@ set_target_properties (AXOctasphereWithInterLOD PROPERTIES FOLDER assignments)
 
 add_subdirectory(./AXSimpleOctasphereWithBezierCurves)
 set_target_properties (AXSimpleOctasphereWithBezierCurves PROPERTIES FOLDER assignments)
+
+add_subdirectory(./AXSimpleAppleWithIntraLOD)
+set_target_properties (AXSimpleAppleWithIntraLOD PROPERTIES FOLDER assignments)
