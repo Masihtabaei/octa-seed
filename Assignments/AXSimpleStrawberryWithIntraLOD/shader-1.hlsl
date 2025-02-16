@@ -2,29 +2,23 @@
 #define NUM_THREADS_Y 11
 #define NUM_THREADS_Z 1
 
-static const float lightDirectionXCoordinate = float(0.0f);
-static const float lightDirectionYCoordinate = float(0.0f);
+static const float3 p0 = float3(0.000, 0.000, -0.300);
+static const float3 p1 = float3(1.000, 0.000, -0.700);
+static const float3 p2 = float3(-0.962, 0.000, 0.300);
+static const float3 p3 = float3(0.000, 0.000, 1.000);
+
+
 static const float3 userDefinedColor = float3(1.0f, 0.0f, 0.0f);
-static const float3 ambientColor = float3(0.0f, 0.0f, 0.0f);
-static const float3 diffuseColor = float3(1.0f, 1.0f, 1.0f);
-static const float4 specularColor_and_Exponent = float4(1.0f, 1.0f, 1.0f, 128.0f);
 
 cbuffer PerMeshConstants : register(b0)
 {
-    float4x4 viewMatrix;
-    float4x4 projectionMatrix;
-    float4 p0;
-    float4 p1;
-    float4 p2;
-    float4 p3;
+    float4x4 transformationMatrix;
     int intraLOD;
 }
 
 struct MeshShaderOutput
 {
     float4 position : SV_POSITION;
-    float3 viewSpacePosition : POSITION;
-    //float3 viewSpaceNormal : NORMAL;
 };
 
 float map(float value, float min1, float max1, float min2, float max2)
@@ -36,7 +30,6 @@ float signNotZero(float k)
 {
     return (k >= 0.0) ? 1.0 : -1.0;
 }
-
 
 float2 signNotZero(float2 v)
 {
@@ -74,14 +67,6 @@ float3 evaluateCubicBezierCurve(float t)
     return result;
 }
 
-float3 computeCubicBezierDerivative(float t)
-{
-    float3 a = 3 * (p1 - p0);
-    float3 b = 3 * (p2 - p1);
-    float3 c = 3 * (p3 - p2);
-    return a * ((1 - t) * (1 - t)) + 2 * b * (1 - t) * t * c * t * t;
-}
-
 [outputtopology("triangle")]
 [numthreads(NUM_THREADS_X, NUM_THREADS_Y, NUM_THREADS_Z)]
 void MS_main(
@@ -100,14 +85,16 @@ void MS_main(
         float t = (decodedCoordinates.z + 1.0f) / 2;
         float3 evaluatedCoordinates = evaluateCubicBezierCurve(t);
         float2 sc = float2(0.0f, 0.0f);
-        
+       
         sc = normalize(decodedCoordinates.yx);
         sc.x = clamp(sc.x, -1.0f, 1.0f);
         sc.y = sqrt(1 - sc.x * sc.x) * signNotZero(sc.y);
         evaluatedCoordinates.xy = mul(float2x2(sc.y, -sc.x, sc.x, sc.y), evaluatedCoordinates.xy);
+   
+        //float2 angle = atan2(decodedCoordinates.y, decodedCoordinates.x);
+        //evaluatedCoordinates.xy = mul(float2x2(cos(angle.x), -sin(angle.x), sin(angle.x), cos(angle.x)), evaluatedCoordinates.xy);
         
-        triangleVertices[threadIdInsideItsGroup.y * intraLOD + threadIdInsideItsGroup.x].position = mul(projectionMatrix, mul(viewMatrix, float4(evaluatedCoordinates, 1.0f)));
-        triangleVertices[threadIdInsideItsGroup.y * intraLOD + threadIdInsideItsGroup.x].viewSpacePosition = mul(viewMatrix, float4(evaluatedCoordinates, 1.0f));
+        triangleVertices[threadIdInsideItsGroup.y * intraLOD + threadIdInsideItsGroup.x].position = mul(transformationMatrix, float4(evaluatedCoordinates, 1.0f));
 
         if ((threadIdInsideItsGroup.x < (intraLOD - 1)) && (threadIdInsideItsGroup.y < (intraLOD - 1)))
         {
@@ -120,6 +107,7 @@ void MS_main(
             {
                 triangleIndices[2 * (threadIdInsideItsGroup.y * (intraLOD - 1) + threadIdInsideItsGroup.x)] = uint3(currentVertexID, nextMostRightVertexID, nextMostBottomVertexID).xyz;
                 triangleIndices[2 * (threadIdInsideItsGroup.y * (intraLOD - 1) + threadIdInsideItsGroup.x) + 1] = uint3(nextMostRightVertexID, nextMostBottomRightVertexID, nextMostBottomVertexID).xyz;
+
             }
             else
             {
@@ -134,16 +122,5 @@ void MS_main(
 float4 PS_main(MeshShaderOutput input)
     : SV_TARGET
 {
-    float3 lightDirection = float3(lightDirectionXCoordinate, lightDirectionYCoordinate, -1.0f);
-    float3 l = normalize(lightDirection);
-    float3 n = normalize(cross(ddx(input.viewSpacePosition), ddy(input.viewSpacePosition)));
-    float3 v = normalize(-input.viewSpacePosition);
-    float3 h = normalize(l + v);
-    float f_diffuse = max(0.0f, dot(n, l));
-    float f_specular = pow(max(0.0f, dot(n, h)), specularColor_and_Exponent.w);
-    float3 textureColor = float4(1.0f, 0.0f, 0.0f, 0.0f);
-    return float4(ambientColor.xyz + f_diffuse * diffuseColor.xyz * textureColor.xyz +
-                      f_specular * specularColor_and_Exponent.xyz,
-                  1);
-    //return float4(userDefinedColor, 1.0f);
+    return float4(userDefinedColor, 1.0f);
 }

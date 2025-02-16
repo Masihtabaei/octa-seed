@@ -87,6 +87,14 @@ ComPtr<IDxcBlob> HLSLCompiler::compileShader(const std::filesystem::path& shader
 
   ComPtr<IDxcBlob> shaderBlob;
   result->GetOutput(DXC_OUT_OBJECT, IID_PPV_ARGS(&shaderBlob), nullptr);
+
+   ComPtr<IDxcResult>       disa_result = nullptr;
+
+   m_compiler->Disassemble(&sourceCodeAsBuffer, IID_PPV_ARGS(&disa_result));
+
+  // Print assembly output
+  //wprintf(L"%s\n", (LPCWSTR)disassembly->GetBufferPointer());
+
   return shaderBlob;
 }
 
