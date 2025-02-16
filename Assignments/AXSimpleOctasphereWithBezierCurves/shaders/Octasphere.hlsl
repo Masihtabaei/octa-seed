@@ -37,7 +37,6 @@ float signNotZero(float k)
     return (k >= 0.0) ? 1.0 : -1.0;
 }
 
-
 float2 signNotZero(float2 v)
 {
     return float2(signNotZero(v.x), signNotZero(v.y));
@@ -69,12 +68,12 @@ float3 evaluateCubicBezierCurve(float t)
 
 float3 evaluateFirstDerivativeCubicBezierCurve(float t)
 {
-    return 2 * (1 - t) * (p1.xyz - p0.xyz) + 2 * t * (p2.xyz - p1.xyz);
+    return 3 * ((1 - t) * (1 - t)) * (p1.xyz - p0.xyz) + 6 * (1 - t) * t * (p2.xyz - p1.xyz) + 3 * t * t * (p3.xyz - p2.xyz);
 }
 
 float3 evaluateSecondDerivativeCubicBezierCurve(float t)
 {
-    return 2 * (p2.xyz - 2 * p1.xyz + p0.xyz);
+    return 6 * (1 - t) * (p2.xyz - 2 * p1.xyz + p0.xyz) + 6 * t * (p3.xyz - 2 * p2.xyz + p1.xyz);
 }
 
 [outputtopology("triangle")]
