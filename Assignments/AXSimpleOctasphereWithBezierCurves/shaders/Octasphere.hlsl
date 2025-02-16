@@ -64,12 +64,13 @@ float3 evaluateQuadraticBezier(float t)
 
 float3 evaluateCubicBezierCurve(float t)
 {
-    float3 firstLerp = lerp(p0.xyz, p1.xyz, t);
-    float3 secondLerp = lerp(p1.xyz, p2.xyz, t);
-    float3 thirdLerp = lerp(p2.xyz, p3.xyz, t);
-    float3 fourthLerp = lerp(firstLerp, secondLerp, t);
-    float3 fifthLerp = lerp(secondLerp, thirdLerp, t);
-    float3 result = lerp(fourthLerp, fifthLerp, t);
+    float3 result = ((1 - t) * (1 - t) * (1 - t)) * p0.xyz + 3 * ((1 - t) * (1 - t)) * t * p1.xyz + 3 * (1 - t) * t * t * p2.xyz + t * t * t * p3.xyz;
+    //float3 firstLerp = lerp(p0.xyz, p1.xyz, t);
+    //float3 secondLerp = lerp(p1.xyz, p2.xyz, t);
+    //float3 thirdLerp = lerp(p2.xyz, p3.xyz, t);
+    //float3 fourthLerp = lerp(firstLerp, secondLerp, t);
+    //float3 fifthLerp = lerp(secondLerp, thirdLerp, t);
+    //float3 result = lerp(fourthLerp, fifthLerp, t);
 
     return result;
 }
