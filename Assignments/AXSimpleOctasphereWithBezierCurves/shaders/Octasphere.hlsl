@@ -64,23 +64,17 @@ float3 evaluateQuadraticBezier(float t)
 
 float3 evaluateCubicBezierCurve(float t)
 {
-    float3 result = ((1 - t) * (1 - t) * (1 - t)) * p0.xyz + 3 * ((1 - t) * (1 - t)) * t * p1.xyz + 3 * (1 - t) * t * t * p2.xyz + t * t * t * p3.xyz;
-    //float3 firstLerp = lerp(p0.xyz, p1.xyz, t);
-    //float3 secondLerp = lerp(p1.xyz, p2.xyz, t);
-    //float3 thirdLerp = lerp(p2.xyz, p3.xyz, t);
-    //float3 fourthLerp = lerp(firstLerp, secondLerp, t);
-    //float3 fifthLerp = lerp(secondLerp, thirdLerp, t);
-    //float3 result = lerp(fourthLerp, fifthLerp, t);
-
-    return result;
+    return ((1 - t) * (1 - t) * (1 - t)) * p0.xyz + 3 * ((1 - t) * (1 - t)) * t * p1.xyz + 3 * (1 - t) * t * t * p2.xyz + t * t * t * p3.xyz;
 }
 
-float3 computeCubicBezierDerivative(float t)
+float3 evaluateFirstDerivativeCubicBezierCurve(float t)
 {
-    float3 a = 3 * (p1 - p0);
-    float3 b = 3 * (p2 - p1);
-    float3 c = 3 * (p3 - p2);
-    return a * ((1 - t) * (1 - t)) + 2 * b * (1 - t) * t * c * t * t;
+    return 2 * (1 - t) * (p1.xyz - p0.xyz) + 2 * t * (p2.xyz - p1.xyz);
+}
+
+float3 evaluateSecondDerivativeCubicBezierCurve(float t)
+{
+    return 2 * (p2.xyz - 2 * p1.xyz + p0.xyz);
 }
 
 [outputtopology("triangle")]
