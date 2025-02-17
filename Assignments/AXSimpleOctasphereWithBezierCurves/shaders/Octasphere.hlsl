@@ -24,7 +24,8 @@ struct MeshShaderOutput
 {
     float4 position : SV_POSITION;
     float3 viewSpacePosition : POSITION;
-    float3 viewSpaceNormal : NORMAL;
+    // float3 viewSpaceNormal : NORMAL;
+    float3 decodedCoordinates : TEXCOORD0;
 };
 
 float map(float value, float min1, float max1, float min2, float max2)
@@ -102,12 +103,15 @@ void MS_main(
         
         triangleVertices[threadIdInsideItsGroup.y * intraLOD + threadIdInsideItsGroup.x].position = mul(projectionMatrix, mul(viewMatrix, float4(evaluatedCoordinates, 1.0f)));
         triangleVertices[threadIdInsideItsGroup.y * intraLOD + threadIdInsideItsGroup.x].viewSpacePosition = mul(viewMatrix, float4(evaluatedCoordinates, 1.0f));
+        triangleVertices[threadIdInsideItsGroup.y * intraLOD + threadIdInsideItsGroup.x].decodedCoordinates = decodedCoordinates;
         
+        /*
         float3 a = normalize(evaluateFirstDerivativeCubicBezierCurve(t));
         float3 b = normalize(a + evaluateSecondDerivativeCubicBezierCurve(t));
         float3 r = normalize(cross(b, a));
         float3 n = normalize(cross(r, a));
         triangleVertices[threadIdInsideItsGroup.y * intraLOD + threadIdInsideItsGroup.x].viewSpaceNormal = mul(viewMatrix, float4(n, 0.0f)).xyz;
+        */
 
         if ((threadIdInsideItsGroup.x < (intraLOD - 1)) && (threadIdInsideItsGroup.y < (intraLOD - 1)))
         {
@@ -135,10 +139,21 @@ void MS_main(
 float4 PS_main(MeshShaderOutput input)
     : SV_TARGET
 {
+    float t = (input.decodedCoordinates.z + 1.0f) / 2;
+    float3 evaluatedCoordinates = evaluateCubicBezierCurve(t);
+    float2 sc = float2(0.0f, 0.0f);
+    sc = normalize(input.decodedCoordinates.yx);
+    sc.x = clamp(sc.x, -1.0f, 1.0f);
+    sc.y = sqrt(1 - sc.x * sc.x) * signNotZero(sc.y);
+    evaluatedCoordinates.xy = mul(float2x2(sc.y, -sc.x, sc.x, sc.y), evaluatedCoordinates.xy);
+    evaluatedCoordinates = mul(viewMatrix, float4(evaluatedCoordinates, 1.0f));
     float3 lightDirection = float3(lightDirectionXCoordinate, lightDirectionYCoordinate, -1.0f);
     float3 l = normalize(lightDirection);
-    float3 n = /*normalize(input.viewSpaceNormal); */ normalize(cross(ddx(input.viewSpacePosition), ddy(input.viewSpacePosition)));
-    float3 v = normalize(-input.viewSpacePosition);
+    float3 n = normalize(cross(ddx(evaluatedCoordinates), ddy(evaluatedCoordinates)));
+    /*normalize(input.viewSpaceNormal);  normalize(
+        cross(ddx(input.viewSpacePosition), ddy(input.viewSpacePosition))); */
+    
+    float3 v = normalize(-evaluatedCoordinates);
     float3 h = normalize(l + v);
     float f_diffuse = max(0.0f, dot(n, l));
     float f_specular = pow(max(0.0f, dot(n, h)), specularColor_and_Exponent.w);
