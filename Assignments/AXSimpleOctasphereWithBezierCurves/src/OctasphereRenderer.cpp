@@ -227,13 +227,16 @@ float4 PS_main(MeshShaderOutput input)
     psoDesc.RasterizerState.CullMode               = D3D12_CULL_MODE_BACK;
     psoDesc.BlendState                             = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
     psoDesc.DSVFormat                              = getDX12AppConfig().depthBufferFormat;
-    psoDesc.DepthStencilState.DepthEnable          = FALSE;
+    psoDesc.DepthStencilState                      = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
+    psoDesc.DepthStencilState.DepthEnable          = TRUE;
     psoDesc.DepthStencilState.StencilEnable        = FALSE;
     psoDesc.SampleMask                             = UINT_MAX;
     psoDesc.NumRenderTargets                       = 1;
-    psoDesc.RTVFormats[0]                          = getRenderTarget()->GetDesc().Format;
-    psoDesc.DSVFormat                              = getDepthStencil()->GetDesc().Format;
+    psoDesc.RTVFormats[0]                          = getDX12AppConfig().renderTargetFormat;
+    psoDesc.DSVFormat                              = getDX12AppConfig().depthBufferFormat;
     psoDesc.SampleDesc.Count                       = 1;
+    psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
+    psoDesc.DepthStencilState.DepthWriteMask                 = D3D12_DEPTH_WRITE_MASK_ALL;
 
     auto psoStream = CD3DX12_PIPELINE_MESH_STATE_STREAM(psoDesc);
 
@@ -297,7 +300,6 @@ public:
 
     commandList->RSSetViewports(1, &getViewport());
     commandList->RSSetScissorRects(1, &getRectScissor());
-
     const auto projectionMatrix =
         glm::perspectiveFovLH_ZO<f32>(glm::radians(45.0f), (f32)getWidth(), (f32)getHeight(), 0.0001f, 10000.0f);
     const auto viewMatrix = m_examinerController.getTransformationMatrix();
