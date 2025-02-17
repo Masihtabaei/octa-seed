@@ -153,7 +153,7 @@ float4 PS_main(MeshShaderOutput input)
     /*normalize(input.viewSpaceNormal);  normalize(
         cross(ddx(input.viewSpacePosition), ddy(input.viewSpacePosition))); */
     
-    float3 v = normalize(-evaluatedCoordinates);
+    float3 v = normalize(-input.viewSpacePosition);
     float3 h = normalize(l + v);
     float f_diffuse = max(0.0f, dot(n, l));
     float f_specular = pow(max(0.0f, dot(n, h)), specularColor_and_Exponent.w);
