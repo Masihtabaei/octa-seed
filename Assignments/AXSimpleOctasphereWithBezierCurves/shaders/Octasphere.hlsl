@@ -24,7 +24,6 @@ struct MeshShaderOutput
 {
     float4 position : SV_POSITION;
     float3 viewSpacePosition : POSITION;
-    // float3 viewSpaceNormal : NORMAL;
     float3 decodedCoordinates : TEXCOORD0;
 };
 
@@ -53,28 +52,21 @@ float3 octDecode(float2 o)
     return normalize(v);
 }
 
-float3 evaluateQuadraticBezier(float t)
-{
-    float3 firstLerp = lerp(p0.xyz, p1.xyz, t);
-    float3 secondLerp = lerp(p2.xyz, p3.xyz, t);
-    float3 result = lerp(firstLerp, secondLerp, t);
-
-    return result;
-}
-
 float3 evaluateCubicBezierCurve(float t)
 {
     return ((1 - t) * (1 - t) * (1 - t)) * p0.xyz + 3 * ((1 - t) * (1 - t)) * t * p1.xyz + 3 * (1 - t) * t * t * p2.xyz + t * t * t * p3.xyz;
 }
 
-float3 evaluateFirstDerivativeCubicBezierCurve(float t)
+float3 calculateFruitCoordinates(float3 decodedCoordinates)
 {
-    return 3 * ((1 - t) * (1 - t)) * (p1.xyz - p0.xyz) + 6 * (1 - t) * t * (p2.xyz - p1.xyz) + 3 * t * t * (p3.xyz - p2.xyz);
-}
-
-float3 evaluateSecondDerivativeCubicBezierCurve(float t)
-{
-    return 6 * (1 - t) * (p2.xyz - 2 * p1.xyz + p0.xyz) + 6 * t * (p3.xyz - 2 * p2.xyz + p1.xyz);
+    float t = (decodedCoordinates.z + 1.0f) / 2;
+    float3 evaluatedCoordinates = evaluateCubicBezierCurve(t);
+    float2 sc = float2(0.0f, 0.0f);    
+    sc = normalize(decodedCoordinates.yx);
+    sc.x = clamp(sc.x, -1.0f, 1.0f);
+    sc.y = sqrt(1 - sc.x * sc.x) * signNotZero(sc.y);
+    evaluatedCoordinates.xy = mul(float2x2(sc.y, -sc.x, sc.x, sc.y), evaluatedCoordinates.xy);
+    return evaluatedCoordinates;
 }
 
 [outputtopology("triangle")]
@@ -92,26 +84,11 @@ void MS_main(
         float yCoordinate = map(threadIdInsideItsGroup.y, 0.0f, intraLOD - 1, -1.0f, 1.0f);
         float3 decodedCoordinates = octDecode(float2(xCoordinate, yCoordinate));
 
-        float t = (decodedCoordinates.z + 1.0f) / 2;
-        float3 evaluatedCoordinates = evaluateCubicBezierCurve(t);
-        float2 sc = float2(0.0f, 0.0f);
-        
-        sc = normalize(decodedCoordinates.yx);
-        sc.x = clamp(sc.x, -1.0f, 1.0f);
-        sc.y = sqrt(1 - sc.x * sc.x) * signNotZero(sc.y);
-        evaluatedCoordinates.xy = mul(float2x2(sc.y, -sc.x, sc.x, sc.y), evaluatedCoordinates.xy);
-        
+        float3 evaluatedCoordinates = calculateFruitCoordinates(decodedCoordinates);
         triangleVertices[threadIdInsideItsGroup.y * intraLOD + threadIdInsideItsGroup.x].position = mul(projectionMatrix, mul(viewMatrix, float4(evaluatedCoordinates, 1.0f)));
         triangleVertices[threadIdInsideItsGroup.y * intraLOD + threadIdInsideItsGroup.x].viewSpacePosition = mul(viewMatrix, float4(evaluatedCoordinates, 1.0f));
         triangleVertices[threadIdInsideItsGroup.y * intraLOD + threadIdInsideItsGroup.x].decodedCoordinates = decodedCoordinates;
         
-        /*
-        float3 a = normalize(evaluateFirstDerivativeCubicBezierCurve(t));
-        float3 b = normalize(a + evaluateSecondDerivativeCubicBezierCurve(t));
-        float3 r = normalize(cross(b, a));
-        float3 n = normalize(cross(r, a));
-        triangleVertices[threadIdInsideItsGroup.y * intraLOD + threadIdInsideItsGroup.x].viewSpaceNormal = mul(viewMatrix, float4(n, 0.0f)).xyz;
-        */
 
         if ((threadIdInsideItsGroup.x < (intraLOD - 1)) && (threadIdInsideItsGroup.y < (intraLOD - 1)))
         {
@@ -139,13 +116,8 @@ void MS_main(
 float4 PS_main(MeshShaderOutput input)
     : SV_TARGET
 {
-    float t = (input.decodedCoordinates.z + 1.0f) / 2;
-    float3 evaluatedCoordinates = evaluateCubicBezierCurve(t);
-    float2 sc = float2(0.0f, 0.0f);
-    sc = normalize(input.decodedCoordinates.yx);
-    sc.x = clamp(sc.x, -1.0f, 1.0f);
-    sc.y = sqrt(1 - sc.x * sc.x) * signNotZero(sc.y);
-    evaluatedCoordinates.xy = mul(float2x2(sc.y, -sc.x, sc.x, sc.y), evaluatedCoordinates.xy);
+    float3 evaluatedCoordinates = calculateFruitCoordinates(input.decodedCoordinates);
+    
     evaluatedCoordinates = mul(viewMatrix, float4(evaluatedCoordinates, 1.0f));
     float3 lightDirection = float3(lightDirectionXCoordinate, lightDirectionYCoordinate, -1.0f);
     float3 l = normalize(lightDirection);
@@ -161,5 +133,4 @@ float4 PS_main(MeshShaderOutput input)
     return float4(ambientColor.xyz + f_diffuse * diffuseColor.xyz * textureColor.xyz +
                       f_specular * specularColor_and_Exponent.xyz,
                   1);
-    //return float4(userDefinedColor, 1.0f);
 }

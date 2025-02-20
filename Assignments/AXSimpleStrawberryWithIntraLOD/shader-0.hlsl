@@ -5,7 +5,7 @@
 static const float3 p0 = float3(0.000, 0.000, -0.300);
 static const float3 p1 = float3(1.000, 0.000, -0.700);
 static const float3 p2 = float3(1.000, 0.000, 0.300);
-static const float3 p3 = float3(0.000, 0.000, 1.000);
+static const float3 p3 = float3(0.349, 0.000, 1.000);
 
 
 static const float3 userDefinedColor = float3(1.0f, 0.0f, 0.0f);
