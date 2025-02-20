@@ -84,37 +84,40 @@ void MS_main(
     out indices uint3 triangleIndices[NUM_INDEX_TRIPLES]
 )
 {
+    if (threadIdInsideItsGroup.x >= intraLOD)
+        return;
+    if (threadIdInsideItsGroup.y >= intraLOD)
+        return;
+    
     SetMeshOutputCounts(intraLOD * intraLOD, 2 * (intraLOD - 1) * (intraLOD - 1));
-    if (threadIdInsideItsGroup.x < intraLOD && threadIdInsideItsGroup.y < intraLOD)
-    {
-        float xCoordinate = map(threadIdInsideItsGroup.x, 0.0f, intraLOD - 1, -1.0f, 1.0f);
-        float yCoordinate = map(threadIdInsideItsGroup.y, 0.0f, intraLOD - 1, -1.0f, 1.0f);
-        float3 decodedCoordinates = octDecode(float2(xCoordinate, yCoordinate));
 
-        float3 evaluatedCoordinates = calculateFruitCoordinates(decodedCoordinates);
-        triangleVertices[threadIdInsideItsGroup.y * intraLOD + threadIdInsideItsGroup.x].position = mul(projectionMatrix, mul(viewMatrix, float4(evaluatedCoordinates, 1.0f)));
-        triangleVertices[threadIdInsideItsGroup.y * intraLOD + threadIdInsideItsGroup.x].viewSpacePosition = mul(viewMatrix, float4(evaluatedCoordinates, 1.0f));
-        triangleVertices[threadIdInsideItsGroup.y * intraLOD + threadIdInsideItsGroup.x].decodedCoordinates = decodedCoordinates;
+    float xCoordinate = map(threadIdInsideItsGroup.x, 0.0f, intraLOD - 1, -1.0f, 1.0f);
+    float yCoordinate = map(threadIdInsideItsGroup.y, 0.0f, intraLOD - 1, -1.0f, 1.0f);
+    float3 decodedCoordinates = octDecode(float2(xCoordinate, yCoordinate));
+
+    float3 evaluatedCoordinates = calculateFruitCoordinates(decodedCoordinates);
+    triangleVertices[threadIdInsideItsGroup.y * intraLOD + threadIdInsideItsGroup.x].position = mul(projectionMatrix, mul(viewMatrix, float4(evaluatedCoordinates, 1.0f)));
+    triangleVertices[threadIdInsideItsGroup.y * intraLOD + threadIdInsideItsGroup.x].viewSpacePosition = mul(viewMatrix, float4(evaluatedCoordinates, 1.0f));
+    triangleVertices[threadIdInsideItsGroup.y * intraLOD + threadIdInsideItsGroup.x].decodedCoordinates = decodedCoordinates;
         
 
-        if ((threadIdInsideItsGroup.x < (intraLOD - 1)) && (threadIdInsideItsGroup.y < (intraLOD - 1)))
+    if ((threadIdInsideItsGroup.x < (intraLOD - 1)) && (threadIdInsideItsGroup.y < (intraLOD - 1)))
+    {
+        uint currentVertexID = threadIdInsideItsGroup.y * intraLOD + threadIdInsideItsGroup.x;
+        uint nextMostRightVertexID = currentVertexID + 1;
+        uint nextMostBottomVertexID = currentVertexID + intraLOD;
+        uint nextMostBottomRightVertexID = nextMostBottomVertexID + 1;
+        if ((threadIdInsideItsGroup.x < (intraLOD / 2) && threadIdInsideItsGroup.y < (intraLOD / 2)) || (threadIdInsideItsGroup.x >= (intraLOD / 2)
+            && threadIdInsideItsGroup.y >= (intraLOD / 2)))
         {
-            uint currentVertexID = threadIdInsideItsGroup.y * intraLOD + threadIdInsideItsGroup.x;
-            uint nextMostRightVertexID = currentVertexID + 1;
-            uint nextMostBottomVertexID = currentVertexID + intraLOD;
-            uint nextMostBottomRightVertexID = nextMostBottomVertexID + 1;
-            if ((threadIdInsideItsGroup.x < (intraLOD / 2) && threadIdInsideItsGroup.y < (intraLOD / 2)) || (threadIdInsideItsGroup.x >= (intraLOD / 2)
-             && threadIdInsideItsGroup.y >= (intraLOD / 2)))
-            {
-                // xzy
-                triangleIndices[2 * (threadIdInsideItsGroup.y * (intraLOD - 1) + threadIdInsideItsGroup.x)] = uint3(currentVertexID, nextMostRightVertexID, nextMostBottomVertexID).xyz;
-                triangleIndices[2 * (threadIdInsideItsGroup.y * (intraLOD - 1) + threadIdInsideItsGroup.x) + 1] = uint3(nextMostRightVertexID, nextMostBottomRightVertexID, nextMostBottomVertexID).xyz;
-            }
-            else
-            {
-                triangleIndices[2 * (threadIdInsideItsGroup.y * (intraLOD - 1) + threadIdInsideItsGroup.x)] = uint3(currentVertexID, nextMostRightVertexID, nextMostBottomRightVertexID).xyz;
-                triangleIndices[2 * (threadIdInsideItsGroup.y * (intraLOD - 1) + threadIdInsideItsGroup.x) + 1] = uint3(nextMostBottomRightVertexID, nextMostBottomVertexID, currentVertexID).xyz;
-            }
+            // xzy
+            triangleIndices[2 * (threadIdInsideItsGroup.y * (intraLOD - 1) + threadIdInsideItsGroup.x)] = uint3(currentVertexID, nextMostRightVertexID, nextMostBottomVertexID).xyz;
+            triangleIndices[2 * (threadIdInsideItsGroup.y * (intraLOD - 1) + threadIdInsideItsGroup.x) + 1] = uint3(nextMostRightVertexID, nextMostBottomRightVertexID, nextMostBottomVertexID).xyz;
+        }
+        else
+        {
+            triangleIndices[2 * (threadIdInsideItsGroup.y * (intraLOD - 1) + threadIdInsideItsGroup.x)] = uint3(currentVertexID, nextMostRightVertexID, nextMostBottomRightVertexID).xyz;
+            triangleIndices[2 * (threadIdInsideItsGroup.y * (intraLOD - 1) + threadIdInsideItsGroup.x) + 1] = uint3(nextMostBottomRightVertexID, nextMostBottomVertexID, currentVertexID).xyz;
         }
     }
 
