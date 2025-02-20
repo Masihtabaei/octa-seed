@@ -6,10 +6,9 @@
 
 static const float lightDirectionXCoordinate = float(0.0f);
 static const float lightDirectionYCoordinate = float(0.0f);
-static const float3 userDefinedColor = float3(1.0f, 0.0f, 0.0f);
 static const float3 ambientColor = float3(0.0f, 0.0f, 0.0f);
 static const float3 diffuseColor = float3(1.0f, 1.0f, 1.0f);
-static const float4 specularColor_and_Exponent = float4(1.0f, 1.0f, 1.0f, 128.0f);
+static const float4 specularAndExponent = float4(1.0f, 1.0f, 1.0f, 128.0f);
 
 cbuffer PerMeshConstants : register(b0)
 {
@@ -101,24 +100,27 @@ void MS_main(
     triangleVertices[threadIdInsideItsGroup.y * intraLOD + threadIdInsideItsGroup.x].decodedCoordinates = decodedCoordinates;
         
 
-    if ((threadIdInsideItsGroup.x < (intraLOD - 1)) && (threadIdInsideItsGroup.y < (intraLOD - 1)))
+    if (threadIdInsideItsGroup.x >= (intraLOD - 1))
+        return;
+    
+    if (threadIdInsideItsGroup.y >= (intraLOD - 1))
+        return;
+    
+    uint currentVertexID = threadIdInsideItsGroup.y * intraLOD + threadIdInsideItsGroup.x;
+    uint nextMostRightVertexID = currentVertexID + 1;
+    uint nextMostBottomVertexID = currentVertexID + intraLOD;
+    uint nextMostBottomRightVertexID = nextMostBottomVertexID + 1;
+    if ((threadIdInsideItsGroup.x < (intraLOD / 2) && threadIdInsideItsGroup.y < (intraLOD / 2)) || (threadIdInsideItsGroup.x >= (intraLOD / 2)
+        && threadIdInsideItsGroup.y >= (intraLOD / 2)))
     {
-        uint currentVertexID = threadIdInsideItsGroup.y * intraLOD + threadIdInsideItsGroup.x;
-        uint nextMostRightVertexID = currentVertexID + 1;
-        uint nextMostBottomVertexID = currentVertexID + intraLOD;
-        uint nextMostBottomRightVertexID = nextMostBottomVertexID + 1;
-        if ((threadIdInsideItsGroup.x < (intraLOD / 2) && threadIdInsideItsGroup.y < (intraLOD / 2)) || (threadIdInsideItsGroup.x >= (intraLOD / 2)
-            && threadIdInsideItsGroup.y >= (intraLOD / 2)))
-        {
-            // xzy
-            triangleIndices[2 * (threadIdInsideItsGroup.y * (intraLOD - 1) + threadIdInsideItsGroup.x)] = uint3(currentVertexID, nextMostRightVertexID, nextMostBottomVertexID).xyz;
-            triangleIndices[2 * (threadIdInsideItsGroup.y * (intraLOD - 1) + threadIdInsideItsGroup.x) + 1] = uint3(nextMostRightVertexID, nextMostBottomRightVertexID, nextMostBottomVertexID).xyz;
-        }
-        else
-        {
-            triangleIndices[2 * (threadIdInsideItsGroup.y * (intraLOD - 1) + threadIdInsideItsGroup.x)] = uint3(currentVertexID, nextMostRightVertexID, nextMostBottomRightVertexID).xyz;
-            triangleIndices[2 * (threadIdInsideItsGroup.y * (intraLOD - 1) + threadIdInsideItsGroup.x) + 1] = uint3(nextMostBottomRightVertexID, nextMostBottomVertexID, currentVertexID).xyz;
-        }
+        // xzy
+        triangleIndices[2 * (threadIdInsideItsGroup.y * (intraLOD - 1) + threadIdInsideItsGroup.x)] = uint3(currentVertexID, nextMostRightVertexID, nextMostBottomVertexID).xyz;
+        triangleIndices[2 * (threadIdInsideItsGroup.y * (intraLOD - 1) + threadIdInsideItsGroup.x) + 1] = uint3(nextMostRightVertexID, nextMostBottomRightVertexID, nextMostBottomVertexID).xyz;
+    }
+    else
+    {
+        triangleIndices[2 * (threadIdInsideItsGroup.y * (intraLOD - 1) + threadIdInsideItsGroup.x)] = uint3(currentVertexID, nextMostRightVertexID, nextMostBottomRightVertexID).xyz;
+        triangleIndices[2 * (threadIdInsideItsGroup.y * (intraLOD - 1) + threadIdInsideItsGroup.x) + 1] = uint3(nextMostBottomRightVertexID, nextMostBottomVertexID, currentVertexID).xyz;
     }
 
 }
@@ -138,9 +140,9 @@ float4 PS_main(MeshShaderOutput input)
     float3 v = normalize(-input.viewSpacePosition);
     float3 h = normalize(l + v);
     float f_diffuse = max(0.0f, dot(n, l));
-    float f_specular = pow(max(0.0f, dot(n, h)), specularColor_and_Exponent.w);
+    float f_specular = pow(max(0.0f, dot(n, h)), specularAndExponent.w);
     float3 textureColor = float4(1.0f, 0.0f, 0.0f, 0.0f);
     return float4(ambientColor.xyz + f_diffuse * diffuseColor.xyz * textureColor.xyz +
-                      f_specular * specularColor_and_Exponent.xyz,
+                      f_specular * specularAndExponent.xyz,
                   1);
 }
