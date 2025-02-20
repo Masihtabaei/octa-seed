@@ -1,6 +1,8 @@
 #define NUM_THREADS_X 11
 #define NUM_THREADS_Y 11
 #define NUM_THREADS_Z 1
+#define NUM_VERTICES 256
+#define NUM_INDEX_TRIPLES 256
 
 static const float lightDirectionXCoordinate = float(0.0f);
 static const float lightDirectionYCoordinate = float(0.0f);
@@ -54,7 +56,12 @@ float3 octDecode(float2 o)
 
 float3 evaluateCubicBezierCurve(float t)
 {
-    return ((1 - t) * (1 - t) * (1 - t)) * p0.xyz + 3 * ((1 - t) * (1 - t)) * t * p1.xyz + 3 * (1 - t) * t * t * p2.xyz + t * t * t * p3.xyz;
+    const float tQuadrat = t * t;
+    const float tCubed = tQuadrat * t; 
+    return p0.xyz + 
+           t * (-3 * p0.xyz + 3 * p1.xyz) + 
+           tQuadrat * (3 * p0.xyz - 6 * p1.xyz + 3 * p2.xyz) + 
+           tCubed * (- p0.xyz + 3 * p1.xyz - 3 * p2.xyz + p3.xyz);
 }
 
 float3 calculateFruitCoordinates(float3 decodedCoordinates)
@@ -73,8 +80,8 @@ float3 calculateFruitCoordinates(float3 decodedCoordinates)
 [numthreads(NUM_THREADS_X, NUM_THREADS_Y, NUM_THREADS_Z)]
 void MS_main(
     in uint3 threadIdInsideItsGroup : SV_GroupThreadID,
-    out vertices MeshShaderOutput triangleVertices[NUM_THREADS_X * NUM_THREADS_Y],
-    out indices uint3 triangleIndices[2 * (NUM_THREADS_X - 1) * (NUM_THREADS_Y - 1)]
+    out vertices MeshShaderOutput triangleVertices[NUM_VERTICES],
+    out indices uint3 triangleIndices[NUM_INDEX_TRIPLES]
 )
 {
     SetMeshOutputCounts(intraLOD * intraLOD, 2 * (intraLOD - 1) * (intraLOD - 1));
