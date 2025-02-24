@@ -1,10 +1,10 @@
-#define NUM_THREADS_X 10
-#define NUM_THREADS_Y 10
+#define NUM_THREADS_X 11
+#define NUM_THREADS_Y 11
 #define NUM_THREADS_Z 1
 
 #define PI radians(180.0f)
 #define HALF_PI radians(90.0f)
-#define MAX_NUM_VERTICES 100
+#define MAX_NUM_VERTICES 128
 #define MAX_NUM_TRIANGLES 256
 
 static const float3 userDefinedColor = float3(0.8f, 0.2f, 0.0f);
@@ -36,13 +36,13 @@ void MS_main(
     out indices uint3 triangleIndices[MAX_NUM_TRIANGLES]
 )
 {
-    SetMeshOutputCounts(MAX_NUM_VERTICES, MAX_NUM_TRIANGLES);
+    SetMeshOutputCounts(121, 242);
     if ((threadIdInsideItsGroup.x < NUM_THREADS_X) && (threadIdInsideItsGroup.y < NUM_THREADS_Y))
     {
         uint xIndex = threadGoupId.x * (NUM_THREADS_X) + threadIdInsideItsGroup.x - threadGoupId.x;
         uint yIndex = threadGoupId.y * (NUM_THREADS_Y) + threadIdInsideItsGroup.y - threadGoupId.y;
-        float lon = (map(float(xIndex), 0.0f, float(interSphereLOD * NUM_THREADS_X - interSphereLOD), -PI, +PI));
-        float lat = (map(float(yIndex), 0.0f, float(interSphereLOD * NUM_THREADS_Y - interSphereLOD), -HALF_PI, +HALF_PI));
+        float lat = (map(float(xIndex), 0.0f, float(interSphereLOD * NUM_THREADS_X - interSphereLOD), 0, 2 * PI));
+        float lon = (map(float(yIndex), 0.0f, float(interSphereLOD * NUM_THREADS_Y - interSphereLOD), 0, +PI));
         float xCoordinate = radius * sin(lon) * cos(lat);
         float yCoordinate = radius * sin(lon) * sin(lat);
         float zCoordinate = radius * cos(lon);
@@ -55,8 +55,8 @@ void MS_main(
             uint secondVertexId = firstVertexId + 1;
             uint thirdVertexId = firstVertexId + NUM_THREADS_X;
             uint fourthVertexId = secondVertexId + NUM_THREADS_X;
-            triangleIndices[(threadIdInsideItsGroup.x + threadIdInsideItsGroup.y * NUM_THREADS_X) * 2] = uint3(firstVertexId, secondVertexId, thirdVertexId);
-            triangleIndices[(threadIdInsideItsGroup.x + threadIdInsideItsGroup.y * NUM_THREADS_X) * 2 + 1] = uint3(secondVertexId, fourthVertexId, thirdVertexId);
+            triangleIndices[(threadIdInsideItsGroup.x + threadIdInsideItsGroup.y * NUM_THREADS_X) * 2] = uint3(firstVertexId, secondVertexId, fourthVertexId).xzy;
+            triangleIndices[(threadIdInsideItsGroup.x + threadIdInsideItsGroup.y * NUM_THREADS_X) * 2 + 1] = uint3(fourthVertexId, thirdVertexId, firstVertexId).xzy;
 
         }
     }
@@ -66,5 +66,5 @@ void MS_main(
 float4 PS_main(MeshShaderOutput input)
     : SV_TARGET
 {
-    return float4(userDefinedColor, 1.0f);
+    return float4(0.0f, 0.0f, 0.0f, 1.0f);
 }

@@ -9,6 +9,7 @@ static const float lightDirectionYCoordinate = float(0.0f);
 static const float3 ambientColor = float3(0.0f, 0.0f, 0.0f);
 static const float3 diffuseColor = float3(1.0f, 1.0f, 1.0f);
 static const float4 specularAndExponent = float4(1.0f, 1.0f, 1.0f, 128.0f);
+static const float3 userDefinedColor = float3(1.0f, 0.0f, 0.0f);
 
 cbuffer PerMeshConstants : register(b0)
 {
@@ -18,7 +19,7 @@ cbuffer PerMeshConstants : register(b0)
     float4 p1;
     float4 p2;
     float4 p3;
-    int intraLOD;
+    int interLOD;
 }
 
 struct MeshShaderOutput
@@ -26,7 +27,13 @@ struct MeshShaderOutput
     float4 position : SV_POSITION;
     float3 viewSpacePosition : POSITION;
     float3 decodedCoordinates : TEXCOORD0;
+    float  positionOffset : TEXCOORD1;
 };
+
+int calculateIntraLOD(int n) 
+{
+    return (n >= 121 ? 11 : n >= 64 ? 9 : n >= 42 ? 7 : n >= 16 ? 5 : 3);
+}
 
 float map(float value, float min1, float max1, float min2, float max2)
 {
@@ -83,22 +90,27 @@ void MS_main(
     out indices uint3 triangleIndices[NUM_INDEX_TRIPLES]
 )
 {
+    int intraLOD = calculateIntraLOD(128 / interLOD);
+    
     if (threadIdInsideItsGroup.x >= intraLOD)
         return;
     if (threadIdInsideItsGroup.y >= intraLOD)
         return;
     
-    SetMeshOutputCounts(intraLOD * intraLOD, 2 * (intraLOD - 1) * (intraLOD - 1));
+    SetMeshOutputCounts(interLOD * intraLOD * intraLOD, 2 * interLOD * (intraLOD - 1) * (intraLOD - 1));
 
     float xCoordinate = map(threadIdInsideItsGroup.x, 0.0f, intraLOD - 1, -1.0f, 1.0f);
     float yCoordinate = map(threadIdInsideItsGroup.y, 0.0f, intraLOD - 1, -1.0f, 1.0f);
     float3 decodedCoordinates = octDecode(float2(xCoordinate, yCoordinate));
 
     float3 evaluatedCoordinates = calculateFruitCoordinates(decodedCoordinates);
-    triangleVertices[threadIdInsideItsGroup.y * intraLOD + threadIdInsideItsGroup.x].position = mul(projectionMatrix, mul(viewMatrix, float4(evaluatedCoordinates, 1.0f)));
-    triangleVertices[threadIdInsideItsGroup.y * intraLOD + threadIdInsideItsGroup.x].viewSpacePosition = mul(viewMatrix, float4(evaluatedCoordinates, 1.0f));
-    triangleVertices[threadIdInsideItsGroup.y * intraLOD + threadIdInsideItsGroup.x].decodedCoordinates = decodedCoordinates;
-        
+    for (int i = 0; i < interLOD; i++)
+    {
+        triangleVertices[threadIdInsideItsGroup.y * intraLOD + threadIdInsideItsGroup.x + i * (intraLOD * intraLOD)].position = mul(projectionMatrix, mul(viewMatrix, float4(evaluatedCoordinates.x + i * 2.5f, evaluatedCoordinates.y, evaluatedCoordinates.z, 1.0f)));
+        triangleVertices[threadIdInsideItsGroup.y * intraLOD + threadIdInsideItsGroup.x + i * (intraLOD * intraLOD)].viewSpacePosition = mul(viewMatrix, float4(evaluatedCoordinates.x + i * 2.5f, evaluatedCoordinates.y, evaluatedCoordinates.z, 1.0f));
+        triangleVertices[threadIdInsideItsGroup.y * intraLOD + threadIdInsideItsGroup.x + i * (intraLOD * intraLOD)].decodedCoordinates = decodedCoordinates;
+        triangleVertices[threadIdInsideItsGroup.y * intraLOD + threadIdInsideItsGroup.x + i * (intraLOD * intraLOD)].positionOffset = i * 2.5f;
+    }
 
     if (threadIdInsideItsGroup.x >= (intraLOD - 1))
         return;
@@ -106,21 +118,24 @@ void MS_main(
     if (threadIdInsideItsGroup.y >= (intraLOD - 1))
         return;
     
-    uint currentVertexID = threadIdInsideItsGroup.y * intraLOD + threadIdInsideItsGroup.x;
-    uint nextMostRightVertexID = currentVertexID + 1;
-    uint nextMostBottomVertexID = currentVertexID + intraLOD;
-    uint nextMostBottomRightVertexID = nextMostBottomVertexID + 1;
-    if ((threadIdInsideItsGroup.x < (intraLOD / 2) && threadIdInsideItsGroup.y < (intraLOD / 2)) || (threadIdInsideItsGroup.x >= (intraLOD / 2)
-        && threadIdInsideItsGroup.y >= (intraLOD / 2)))
+    
+    for (int i = 0; i < interLOD; i++)
     {
-        // xzy
-        triangleIndices[2 * (threadIdInsideItsGroup.y * (intraLOD - 1) + threadIdInsideItsGroup.x)] = uint3(currentVertexID, nextMostRightVertexID, nextMostBottomVertexID).xyz;
-        triangleIndices[2 * (threadIdInsideItsGroup.y * (intraLOD - 1) + threadIdInsideItsGroup.x) + 1] = uint3(nextMostRightVertexID, nextMostBottomRightVertexID, nextMostBottomVertexID).xyz;
-    }
-    else
-    {
-        triangleIndices[2 * (threadIdInsideItsGroup.y * (intraLOD - 1) + threadIdInsideItsGroup.x)] = uint3(currentVertexID, nextMostRightVertexID, nextMostBottomRightVertexID).xyz;
-        triangleIndices[2 * (threadIdInsideItsGroup.y * (intraLOD - 1) + threadIdInsideItsGroup.x) + 1] = uint3(nextMostBottomRightVertexID, nextMostBottomVertexID, currentVertexID).xyz;
+        uint currentVertexID = threadIdInsideItsGroup.y * intraLOD + threadIdInsideItsGroup.x + i * (intraLOD * intraLOD);
+        uint nextMostRightVertexID = currentVertexID + 1;
+        uint nextMostBottomVertexID = currentVertexID + intraLOD;
+        uint nextMostBottomRightVertexID = nextMostBottomVertexID + 1;
+        if ((threadIdInsideItsGroup.x < (intraLOD / 2) && threadIdInsideItsGroup.y < (intraLOD / 2)) || (threadIdInsideItsGroup.x >= (intraLOD / 2)
+            && threadIdInsideItsGroup.y >= (intraLOD / 2)))
+        {
+            triangleIndices[2 * (threadIdInsideItsGroup.y * (intraLOD - 1) + threadIdInsideItsGroup.x) + i * 2  * (intraLOD - 1) * (intraLOD - 1)] = uint3(currentVertexID, nextMostRightVertexID, nextMostBottomVertexID).xyz;
+            triangleIndices[2 * (threadIdInsideItsGroup.y * (intraLOD - 1) + threadIdInsideItsGroup.x) + 1 + i * 2 * (intraLOD - 1) * (intraLOD - 1)] = uint3(nextMostRightVertexID, nextMostBottomRightVertexID, nextMostBottomVertexID).xyz;
+        }
+        else
+        {
+            triangleIndices[2 * (threadIdInsideItsGroup.y * (intraLOD - 1) + threadIdInsideItsGroup.x) + i * 2  * (intraLOD - 1) * (intraLOD - 1)] = uint3(currentVertexID, nextMostRightVertexID, nextMostBottomRightVertexID).xyz;
+            triangleIndices[2 * (threadIdInsideItsGroup.y * (intraLOD - 1) + threadIdInsideItsGroup.x) + 1 + i * 2 * (intraLOD - 1) * (intraLOD - 1)] = uint3(nextMostBottomRightVertexID, nextMostBottomVertexID, currentVertexID).xyz;
+        }
     }
 
 }
@@ -131,11 +146,10 @@ float4 PS_main(MeshShaderOutput input)
     float3 evaluatedCoordinates = calculateFruitCoordinates(input.decodedCoordinates);
     
     evaluatedCoordinates = mul(viewMatrix, float4(evaluatedCoordinates, 1.0f));
+    evaluatedCoordinates.x += input.positionOffset;
     float3 lightDirection = float3(lightDirectionXCoordinate, lightDirectionYCoordinate, -1.0f);
     float3 l = normalize(lightDirection);
-    float3 n = normalize(cross(ddx(evaluatedCoordinates), ddy(evaluatedCoordinates)));
-    /*normalize(input.viewSpaceNormal);  normalize(
-        cross(ddx(input.viewSpacePosition), ddy(input.viewSpacePosition))); */
+    float3 n = p3.w ? normalize(cross(ddx(input.viewSpacePosition), ddy(input.viewSpacePosition))) : normalize(cross(ddx(evaluatedCoordinates), ddy(evaluatedCoordinates)));
     
     float3 v = normalize(-input.viewSpacePosition);
     float3 h = normalize(l + v);
@@ -143,6 +157,5 @@ float4 PS_main(MeshShaderOutput input)
     float f_specular = pow(max(0.0f, dot(n, h)), specularAndExponent.w);
     float3 textureColor = float4(1.0f, 0.0f, 0.0f, 0.0f);
     return float4(ambientColor.xyz + f_diffuse * diffuseColor.xyz * textureColor.xyz +
-                      f_specular * specularAndExponent.xyz,
-                  1);
+                      f_specular * specularAndExponent.xyz, 1);
 }

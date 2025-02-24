@@ -14,7 +14,8 @@ private:
   struct UiData
   {
     f32v3 m_backgroundColor     = {0.0f, 0.0f, 0.0f};
-    i32   m_intraLevelOfDetails = 5;
+    i32   m_intraLevelOfDetails = 1;
+    bool   m_flatShading = false;
     f32v3 m_firstControlPoint   = f32v3(0.0f, 0.0f, -0.3f);
     f32v3 m_secondControlPoint  = f32v3(1.0f, 0.0f, -0.7f);
     f32v3 m_thirdControlPoint   = f32v3(1.0f, 0.0f, 0.3f);
@@ -304,12 +305,8 @@ public:
         glm::perspectiveFovLH_ZO<f32>(glm::radians(45.0f), (f32)getWidth(), (f32)getHeight(), 0.0001f, 10000.0f);
     const auto viewMatrix = m_examinerController.getTransformationMatrix();
 
-    i32 intraLOD = m_uiData.m_intraLevelOfDetails * 2 + 1;
-
     commandList->SetPipelineState(m_pipelineState.Get());
     commandList->SetGraphicsRootSignature(m_rootSignature.Get());
-
-    //const auto accumulatedTransformation = projectionMatrix * viewMatrix;
 
     commandList->SetGraphicsRoot32BitConstants(0, 16, &viewMatrix, 0);
     commandList->SetGraphicsRoot32BitConstants(0, 16, &projectionMatrix, 16);
@@ -317,13 +314,13 @@ public:
     auto m = f32v4(m_uiData.m_firstControlPoint, 0.0f);
     auto n = f32v4(m_uiData.m_secondControlPoint, 0.0f);
     auto p = f32v4(m_uiData.m_thirdControlPoint, 0.0f);
-    auto q = f32v4(m_uiData.m_fourthControlPoint, 0.0f);
+    auto q = f32v4(m_uiData.m_fourthControlPoint, m_uiData.m_flatShading);
     commandList->SetGraphicsRoot32BitConstants(0, 4, &m, 32);
     commandList->SetGraphicsRoot32BitConstants(0, 4, &n, 36);
     commandList->SetGraphicsRoot32BitConstants(0, 4, &p, 40);
     commandList->SetGraphicsRoot32BitConstants(0, 4, &q, 44);
 
-    commandList->SetGraphicsRoot32BitConstants(0, 1, &intraLOD, 48);
+    commandList->SetGraphicsRoot32BitConstants(0, 1, &m_uiData.m_intraLevelOfDetails, 48);
 
     commandList->DispatchMesh(1, 1, 1);
   }
@@ -335,7 +332,8 @@ public:
     ImGui::End();
     ImGui::Begin("Configuration");
     ImGui::ColorEdit3("Background Color", &m_uiData.m_backgroundColor[0]);
-    ImGui::SliderInt("Intra Level of Detail", &m_uiData.m_intraLevelOfDetails, 1, 5);
+    ImGui::SliderInt("Inter Level of Detail", &m_uiData.m_intraLevelOfDetails, 1, 28);
+    ImGui::Checkbox("Flat Shading", &m_uiData.m_flatShading);
     ImGui::SliderFloat3("First Control Point", &m_uiData.m_firstControlPoint.x, -5, 5);
     ImGui::SliderFloat3("Second Control Point", &m_uiData.m_secondControlPoint.x, -5, 5);
     ImGui::SliderFloat3("Third Control Point", &m_uiData.m_thirdControlPoint.x, -5, 5);
