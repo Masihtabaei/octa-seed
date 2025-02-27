@@ -31,7 +31,7 @@ struct DX12AppConfig
   ui32              height             = 480;                        //! Height of the drawing aera.
   bool              debug              = TrueIfBuildConfigIsDebug;   //! Create debug context;
   ui32              frameCount         = 3;                          //! Number of swapchain-frames in flight.
-  D3D_FEATURE_LEVEL d3d_featureLevel   = D3D_FEATURE_LEVEL_11_0;     //! Features for D3D12.
+  D3D_FEATURE_LEVEL d3d_featureLevel   = D3D_FEATURE_LEVEL_12_0;     //! Features for D3D12.
   DXGI_FORMAT       renderTargetFormat = DXGI_FORMAT_R8G8B8A8_UNORM; //! Format for frames.
   DXGI_FORMAT       depthBufferFormat  = DXGI_FORMAT_D32_FLOAT;      //! Format for depth buffer.
   bool              useVSync           = true;                       //! True, to enable vertical synchronization.

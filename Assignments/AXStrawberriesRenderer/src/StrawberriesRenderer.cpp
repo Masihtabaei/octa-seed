@@ -1,18 +1,20 @@
+#include <fstream>
 #include <gimslib/d3d/DX12App.hpp>
 #include <gimslib/d3d/DX12Util.hpp>
 #include <gimslib/types.hpp>
 #include <gimslib/ui/ExaminerController.hpp>
 #include <imgui.h>
 #include <iostream>
+
 using namespace gims;
 
-class AppleRenderer : public DX12App
+class SphereRenderer : public DX12App
 {
 private:
   struct UiData
   {
     f32v3 m_backgroundColor     = {0.0f, 0.0f, 0.0f};
-    i32   m_intraLevelOfDetails = 5;
+    i32   m_intraLevelOfDetails = 1;
   };
 
   UiData m_uiData;
@@ -26,7 +28,7 @@ private:
   void createRootSignature()
   {
     CD3DX12_ROOT_PARAMETER rootParameters[1] = {};
-    rootParameters[0].InitAsConstants(17, 0, 0, D3D12_SHADER_VISIBILITY_ALL);
+    rootParameters[0].InitAsConstants(33, 0, 0, D3D12_SHADER_VISIBILITY_ALL);
 
     CD3DX12_ROOT_SIGNATURE_DESC descRootSignature;
     descRootSignature.Init(1, rootParameters, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_NONE);
@@ -40,29 +42,33 @@ private:
     std::cout << "Root signature created successfully!" << std::endl;
   }
 
+
   void createPipeline()
   {
     const auto meshShader = compileShader(
-        L"../../../assignments/AXSimpleStrawberryWithIntraLOD/shaders/Strawberry.hlsl", L"MS_main", L"ms_6_5");
+        L"../../../assignments/AXStrawberriesRenderer/shaders/Strawberries.hlsl", L"MS_main", L"ms_6_5");
     const auto pixelShader = compileShader(
-        L"../../../assignments/AXSimpleStrawberryWithIntraLOD/shaders/Strawberry.hlsl", L"PS_main", L"ps_6_5");
+        L"../../../assignments/AXStrawberriesRenderer/shaders/Strawberries.hlsl", L"PS_main", L"ps_6_5");
 
     D3DX12_MESH_SHADER_PIPELINE_STATE_DESC psoDesc = {};
     psoDesc.pRootSignature                         = m_rootSignature.Get();
     psoDesc.MS                                     = HLSLCompiler::convert(meshShader);
     psoDesc.PS                                     = HLSLCompiler::convert(pixelShader);
     psoDesc.RasterizerState                        = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
-    psoDesc.RasterizerState.FillMode               = D3D12_FILL_MODE_WIREFRAME;
+    psoDesc.RasterizerState.FillMode               = D3D12_FILL_MODE_SOLID;
     psoDesc.RasterizerState.CullMode               = D3D12_CULL_MODE_BACK;
     psoDesc.BlendState                             = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
     psoDesc.DSVFormat                              = getDX12AppConfig().depthBufferFormat;
-    psoDesc.DepthStencilState.DepthEnable          = FALSE;
+    psoDesc.DepthStencilState                      = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
+    psoDesc.DepthStencilState.DepthEnable          = TRUE;
     psoDesc.DepthStencilState.StencilEnable        = FALSE;
     psoDesc.SampleMask                             = UINT_MAX;
     psoDesc.NumRenderTargets                       = 1;
-    psoDesc.RTVFormats[0]                          = getRenderTarget()->GetDesc().Format;
-    psoDesc.DSVFormat                              = getDepthStencil()->GetDesc().Format;
+    psoDesc.RTVFormats[0]                          = getDX12AppConfig().renderTargetFormat;
+    psoDesc.DSVFormat                              = getDX12AppConfig().depthBufferFormat;
     psoDesc.SampleDesc.Count                       = 1;
+    psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
+    psoDesc.DepthStencilState.DepthWriteMask                 = D3D12_DEPTH_WRITE_MASK_ALL;
 
     auto psoStream = CD3DX12_PIPELINE_MESH_STATE_STREAM(psoDesc);
 
@@ -76,7 +82,7 @@ private:
   }
 
 public:
-  AppleRenderer(const DX12AppConfig createInfo)
+  SphereRenderer(const DX12AppConfig createInfo)
       : DX12App(createInfo)
       , m_examinerController(true)
   {
@@ -126,20 +132,15 @@ public:
 
     commandList->RSSetViewports(1, &getViewport());
     commandList->RSSetScissorRects(1, &getRectScissor());
-
     const auto projectionMatrix =
         glm::perspectiveFovLH_ZO<f32>(glm::radians(45.0f), (f32)getWidth(), (f32)getHeight(), 0.0001f, 10000.0f);
     const auto viewMatrix = m_examinerController.getTransformationMatrix();
-
-    i32 intraLOD = m_uiData.m_intraLevelOfDetails * 2 + 1;
-
     commandList->SetPipelineState(m_pipelineState.Get());
     commandList->SetGraphicsRootSignature(m_rootSignature.Get());
 
-    const auto accumulatedTransformation = projectionMatrix * viewMatrix;
-
-    commandList->SetGraphicsRoot32BitConstants(0, 16, &accumulatedTransformation, 0);
-    commandList->SetGraphicsRoot32BitConstants(0, 1, &intraLOD, 16);
+    commandList->SetGraphicsRoot32BitConstants(0, 16, &viewMatrix, 0);
+    commandList->SetGraphicsRoot32BitConstants(0, 16, &projectionMatrix, 16);
+    commandList->SetGraphicsRoot32BitConstants(0, 1, &m_uiData.m_intraLevelOfDetails, 32);
 
     commandList->DispatchMesh(1, 1, 1);
   }
@@ -151,7 +152,7 @@ public:
     ImGui::End();
     ImGui::Begin("Configuration");
     ImGui::ColorEdit3("Background Color", &m_uiData.m_backgroundColor[0]);
-    ImGui::SliderInt("Intra Level of Detail", &m_uiData.m_intraLevelOfDetails, 1, 5);
+    ImGui::SliderInt("Inter Level of Detail", &m_uiData.m_intraLevelOfDetails, 1, 28);
     ImGui::End();
   }
 };
@@ -159,11 +160,11 @@ public:
 int main(int /* argc*/, char /* **argv */)
 {
   gims::DX12AppConfig config;
-  config.title    = L"Assignment X Simple Strawberry";
+  config.title    = L"Assignment X Strawberries Renderer";
   config.useVSync = false;
   try
   {
-    AppleRenderer app(config);
+    SphereRenderer app(config);
     app.checkForMeshShaderSupport();
     app.run();
   }

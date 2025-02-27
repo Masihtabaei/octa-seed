@@ -10,11 +10,17 @@ set_target_properties (AXTwoOctaspheres PROPERTIES FOLDER assignments)
 add_subdirectory(./AXOctasphereWithInterLOD)
 set_target_properties (AXOctasphereWithInterLOD PROPERTIES FOLDER assignments)
 
-add_subdirectory(./AXSimpleOctasphereWithBezierCurves)
-set_target_properties (AXSimpleOctasphereWithBezierCurves PROPERTIES FOLDER assignments)
+add_subdirectory(./AXFruitsGenerator)
+set_target_properties (AXFruitsGenerator PROPERTIES FOLDER assignments)
 
-add_subdirectory(./AXSimpleAppleWithIntraLOD)
-set_target_properties (AXSimpleAppleWithIntraLOD PROPERTIES FOLDER assignments)
+add_subdirectory(./AXApplesRenderer)
+set_target_properties (AXApplesRenderer PROPERTIES FOLDER assignments)
 
-add_subdirectory(./AXSimpleStrawberryWithIntraLOD)
-set_target_properties (AXSimpleStrawberryWithIntraLOD PROPERTIES FOLDER assignments)
+add_subdirectory(./AXStrawberriesRenderer)
+set_target_properties (AXStrawberriesRenderer PROPERTIES FOLDER assignments)
+
+add_subdirectory(./AXLemonsRenderer)
+set_target_properties (AXLemonsRenderer PROPERTIES FOLDER assignments)
+
+add_subdirectory(./AXPearsRenderer)
+set_target_properties (AXPearsRenderer PROPERTIES FOLDER assignments)
