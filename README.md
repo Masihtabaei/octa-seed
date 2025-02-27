@@ -1,17 +1,9 @@
-# cpp_vcpkg_project
+# OctaSeed
 
-[![ci](https://github.com/cpp-best-practices/cpp_vcpkg_project/actions/workflows/ci.yml/badge.svg)](https://github.com/cpp-best-practices/cpp_vcpkg_project/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/cpp-best-practices/cpp_vcpkg_project/branch/main/graph/badge.svg)](https://codecov.io/gh/cpp-best-practices/cpp_vcpkg_project)
+A visually rich garden scene, even with lush trees and detailed foliage, often feels incomplete without fruits.
+This paper builds on our previous work on procedural grass, leaf, and tree generation by introducing a method for procedurally generating fruits.
+We developed parameterized mesh shaders to create fruits with a spherical shape.
+As a base topology, we experimented with various options, including an octahedron, which is normalized and transformed into a sphere.
+This sphere is then deformed into different fruit shapes using parameterized curves.
+Different types of \ac{LOD} are also available to control quantity and also quality of fruits present in the scene.
 
-LGTM Has to be set up manually after template is created:
-
-[![Language grade: C++](https://img.shields.io/lgtm/grade/cpp/github/cpp-best-practices/cpp_vcpkg_project)](https://lgtm.com/projects/g/cpp-best-practices/cpp_vcpkg_project/context:cpp)
-
-## About cpp_vcpkg_project
-A production-ready C++ project made with vcpkg
-
-## More Details
-
- * [Dependency Setup](./docs/dependencies.md)
- * [Building Details](./docs/building.md)
- * [Docker](./docs/docker.md)
