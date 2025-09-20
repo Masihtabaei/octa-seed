@@ -30,7 +30,7 @@ cd build
 cmake -DCMAKE_TOOLCHAIN_FILE=<vcpkg.cmake-file-path> ..
 ```
 
-After generating the solution, you can open it and select and run one of the projects within the `Assignments`-directory to generate some fruits. 
+After generating the solution, you can open it to select and run one of the projects within the `Assignments`-directory for generating some fruits. 
 
 ## Screenshots
 
