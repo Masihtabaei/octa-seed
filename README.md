@@ -1,9 +1,33 @@
 # OctaSeed
 
-A visually rich garden scene, even with lush trees and detailed foliage, often feels incomplete without fruits.
-This paper builds on our previous work on procedural grass, leaf, and tree generation by introducing a method for procedurally generating fruits.
-We developed parameterized mesh shaders to create fruits with a spherical shape.
-As a base topology, we experimented with various options, including an octahedron, which is normalized and transformed into a sphere.
-This sphere is then deformed into different fruit shapes using parameterized curves.
-Different types of \ac{LOD} are also available to control quantity and also quality of fruits present in the scene.
+> [!NOTE]  
+> This project was completed as part of the **GPU Image Synthesis** course during the **Winter Term 2025** of our undergraduate studies, offered by [Prof. Dr. Quirin Meyer](https://www.hs-coburg.de/en/personen/prof-dr-quirin-meyer/) at [Coburg University](https://www.hs-coburg.de/en/). It was originally developed on our university’s GitLab instance and later partially migrated here, so some elements like issues may be missing.
 
+> [!IMPORTANT]  
+> This project is licensed under the [MIT License](https://masihtabaei.dev/licenses/mit).
+
+> [!TIP]
+> This project was later integrated in our award-winning publication. You can see it in action [here](https://github.com/Bloodwyn/gptree) and find the publication [here](https://diglib.eg.org/items/93fc78c0-71fa-4511-8564-a7e5268bf27a).
+
+## General Information
+
+Sueprvisors: [Prof. Dr. Quirin Meyer](https://www.hs-coburg.de/en/personen/prof-dr-quirin-meyer/) and [Bastian Kuth](https://bloodwyn.github.io/#CV_Bastian_Kuth.pdf)
+
+In this work, we introduce OctaSeed, a novel method for procedural three-dimensional (3D) fruit generation that leverages the
+power of mesh shaders. Our approach enables the efficient creation of fruits that can be represented as spheres or derived from
+spherical forms, supporting both inter- and intra-level of details (LODs). As the base topology, we use an octahedron, which is
+first deformed into an unit sphere and then further customized using parametric cubic Bézier curves. This allows us to generate
+a diverse range of fruit shapes, including apples, pears, strawberries, and lemons, with high geometric flexibility and efficiency.
+
+
+## Usage
+
+```bash
+git clone <repo-link>
+cd octa-seed
+mkdir build
+cd build
+cmake -DCMAKE_TOOLCHAIN_FILE=<vcpkg.cmake-file-path> ..
+```
+
+After generating the solution, you can open it and select and run one of the projects within the `Assignments`-directory to generate some fruits. 
